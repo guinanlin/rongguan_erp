@@ -1,0 +1,106 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-05-17 01:51:51.573699",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_mimf",
+  "pattern_no",
+  "style_image",
+  "style_name",
+  "version_no",
+  "size_range",
+  "creation_date",
+  "created_by",
+  "status",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_mimf",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "pattern_no",
+   "fieldtype": "Data",
+   "label": "\u7eb8\u6837\u7f16\u53f7",
+   "unique": 1
+  },
+  {
+   "fieldname": "style_image",
+   "fieldtype": "Attach Image",
+   "label": "\u6b3e\u5f0f\u56fe\u7247"
+  },
+  {
+   "fieldname": "style_name",
+   "fieldtype": "Link",
+   "label": "\u6b3e\u5f0f\u540d\u79f0",
+   "options": "Item"
+  },
+  {
+   "fieldname": "version_no",
+   "fieldtype": "Data",
+   "label": "\u7248\u672c\u53f7"
+  },
+  {
+   "fieldname": "size_range",
+   "fieldtype": "Data",
+   "label": "\u5c3a\u7801\u8303\u56f4"
+  },
+  {
+   "fieldname": "creation_date",
+   "fieldtype": "Date",
+   "label": "\u521b\u5efa\u65f6\u95f4"
+  },
+  {
+   "fieldname": "created_by",
+   "fieldtype": "Data",
+   "label": "\u521b\u5efa\u4eba"
+  },
+  {
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "\u72b6\u6001",
+   "options": "\u8349\u7a3f\n\u5df2\u5ba1\u6838\n\u5df2\u53d1\u5e03\n\u5df2\u5f52\u6863"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "RG Pattern",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-05-17 01:59:59.184042",
+ "modified_by": "Administrator",
+ "module": "Rongguan Erp",
+ "name": "RG Pattern",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

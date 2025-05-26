@@ -1,0 +1,141 @@
+<!DOCTYPE html>
+<html>
+<head>
+    <meta charset="utf-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>{{ title }}</title>
+    <link rel="stylesheet" href="/assets/frappe/css/bootstrap.css">
+    <link rel="stylesheet" href="/assets/css/frappe-web.css">
+    <style>
+        .token-panel {
+            margin-top: 20px;
+            padding: 15px;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+            background-color: #f9f9f9;
+        }
+        .token-result {
+            margin-top: 15px;
+            word-break: break-all;
+        }
+        .error-msg {
+            color: #d9534f;
+        }
+        .success-msg {
+            color: #5cb85c;
+        }
+        pre {
+            background-color: #f5f5f5;
+            padding: 10px;
+            border-radius: 4px;
+            border: 1px solid #ccc;
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <div class="page-header">
+            <h1>{{ title }} <small>用于测试和开发</small></h1>
+        </div>
+
+        <div class="row">
+            <div class="col-md-12">
+                <div class="alert alert-warning">
+                    <strong>警告：</strong> 此页面仅供系统管理员使用，用于测试和开发目的。请勿在生产环境中随意使用。
+                </div>
+            </div>
+        </div>
+
+        <div class="row">
+            <div class="col-md-6">
+                <div class="panel panel-default">
+                    <div class="panel-heading"><h4>令牌生成</h4></div>
+                    <div class="panel-body">
+                        <form id="tokenForm">
+                            <div class="form-group">
+                                <label for="oauth_client">OAuth客户端</label>
+                                <select class="form-control" id="oauth_client" required>
+                                    <option value="">-- 选择OAuth客户端 --</option>
+                                    {% for client in oauth_clients %}
+                                    <option value="{{ client.client_id }}">{{ client.app_name }} ({{ client.name }})</option>
+                                    {% endfor %}
+                                </select>
+                            </div>
+                            <div class="form-group">
+                                <label for="username">用户名 (可选)</label>
+                                <input type="text" class="form-control" id="username" placeholder="不填写则使用当前登录用户">
+                            </div>
+                            <button type="submit" class="btn btn-primary" id="generateBtn">生成令牌</button>
+                        </form>
+                    </div>
+                </div>
+            </div>
+            
+            <div class="col-md-6">
+                <div class="token-panel">
+                    <h4>结果</h4>
+                    <div id="loading" style="display:none;">
+                        <p><i class="fa fa-spinner fa-spin"></i> 正在生成令牌...</p>
+                    </div>
+                    <div id="tokenResult" class="token-result"></div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="/assets/frappe/js/lib/jquery/jquery.min.js"></script>
+    <script>
+        $(document).ready(function() {
+            $("#tokenForm").on("submit", function(e) {
+                e.preventDefault();
+                
+                var clientId = $("#oauth_client").val();
+                var username = $("#username").val();
+                
+                if (!clientId) {
+                    $("#tokenResult").html('<p class="error-msg">请选择OAuth客户端</p>');
+                    return;
+                }
+                
+                $("#loading").show();
+                $("#tokenResult").empty();
+                $("#generateBtn").prop("disabled", true);
+                
+                frappe.call({
+                    method: "rongguan_erp.utils.auth.oauth2.manual_token",
+                    args: {
+                        client_id: clientId,
+                        username: username || ""
+                    },
+                    callback: function(r) {
+                        $("#loading").hide();
+                        $("#generateBtn").prop("disabled", false);
+                        
+                        if (r.exc) {
+                            // 显示错误信息
+                            var errorMsg = r._server_messages ? JSON.parse(r._server_messages)[0] : "生成令牌时发生错误";
+                            $("#tokenResult").html('<p class="error-msg">错误: ' + errorMsg + '</p>');
+                        } else {
+                            // 显示成功结果
+                            var result = r.message;
+                            var html = '<p class="success-msg">令牌生成成功!</p>';
+                            html += '<h5>访问令牌 (Access Token):</h5>';
+                            html += '<pre>' + result.access_token + '</pre>';
+                            
+                            if (result.refresh_token) {
+                                html += '<h5>刷新令牌 (Refresh Token):</h5>';
+                                html += '<pre>' + result.refresh_token + '</pre>';
+                            }
+                            
+                            html += '<h5>过期时间:</h5>';
+                            html += '<p>' + result.expires_in + ' 秒</p>';
+                            
+                            $("#tokenResult").html(html);
+                        }
+                    }
+                });
+            });
+        });
+    </script>
+</body>
+</html> 

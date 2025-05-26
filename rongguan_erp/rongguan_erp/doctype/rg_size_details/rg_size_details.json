@@ -1,0 +1,38 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-05-04 02:45:27.605980",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "\u5c3a\u7801",
+  "\u6570\u91cf"
+ ],
+ "fields": [
+  {
+   "fieldname": "\u5c3a\u7801",
+   "fieldtype": "Data",
+   "label": "\u5c3a\u7801"
+  },
+  {
+   "fieldname": "\u6570\u91cf",
+   "fieldtype": "Int",
+   "label": "\u6570\u91cf"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-05-04 03:02:40.856722",
+ "modified_by": "Administrator",
+ "module": "Rongguan Erp",
+ "name": "RG Size Details",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

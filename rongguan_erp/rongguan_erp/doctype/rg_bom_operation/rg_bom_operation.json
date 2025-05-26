@@ -1,0 +1,213 @@
+{
+ "actions": [],
+ "creation": "2025-05-04 00:19:47.072669",
+ "doctype": "DocType",
+ "document_type": "Setup",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "sequence_id",
+  "operation",
+  "\u5de5\u5382",
+  "col_break1",
+  "workstation_type",
+  "workstation",
+  "time_in_mins",
+  "fixed_time",
+  "costing_section",
+  "hour_rate",
+  "base_hour_rate",
+  "column_break_9",
+  "operating_cost",
+  "base_operating_cost",
+  "column_break_11",
+  "batch_size",
+  "set_cost_based_on_bom_qty",
+  "cost_per_unit",
+  "base_cost_per_unit",
+  "more_information_section",
+  "description",
+  "column_break_18",
+  "image"
+ ],
+ "fields": [
+  {
+   "depends_on": "eval:doc.parenttype == \"Routing\"",
+   "fieldname": "sequence_id",
+   "fieldtype": "Int",
+   "label": "\u5e8f\u5217ID"
+  },
+  {
+   "fieldname": "operation",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u64cd\u4f5c",
+   "oldfieldname": "operation_no",
+   "oldfieldtype": "Data",
+   "options": "Operation",
+   "reqd": 1
+  },
+  {
+   "fieldname": "col_break1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "workstation_type",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u5de5\u4f5c\u7ad9\u7c7b\u578b",
+   "options": "Workstation Type"
+  },
+  {
+   "depends_on": "eval:!doc.workstation_type",
+   "fieldname": "workstation",
+   "fieldtype": "Link",
+   "label": "\u5de5\u4f5c\u7ad9",
+   "oldfieldname": "workstation",
+   "oldfieldtype": "Link",
+   "options": "Workstation"
+  },
+  {
+   "description": "In minutes",
+   "fetch_from": "operation.total_operation_time",
+   "fetch_if_empty": 1,
+   "fieldname": "time_in_mins",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "\u64cd\u4f5c\u65f6\u95f4",
+   "oldfieldname": "time_in_mins",
+   "oldfieldtype": "Currency",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "description": "Operation time does not depend on quantity to produce",
+   "fieldname": "fixed_time",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "\u56fa\u5b9a\u65f6\u95f4"
+  },
+  {
+   "fieldname": "costing_section",
+   "fieldtype": "Section Break",
+   "label": "\u6210\u672c\u8ba1\u7b97"
+  },
+  {
+   "fieldname": "hour_rate",
+   "fieldtype": "Currency",
+   "label": "\u5c0f\u65f6\u8d39\u7387",
+   "oldfieldname": "hour_rate",
+   "oldfieldtype": "Currency",
+   "options": "currency",
+   "precision": "2"
+  },
+  {
+   "depends_on": "eval:parent.doctype == 'BOM'",
+   "fieldname": "base_hour_rate",
+   "fieldtype": "Currency",
+   "label": "\u57fa\u672c\u5c0f\u65f6\u8d39\u7387(\u516c\u53f8\u8d27\u5e01)",
+   "options": "Company:company:default_currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_9",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "operating_cost",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "\u64cd\u4f5c\u6210\u672c",
+   "oldfieldname": "operating_cost",
+   "oldfieldtype": "Currency",
+   "options": "currency",
+   "read_only": 1
+  },
+  {
+   "depends_on": "eval:parent.doctype == 'BOM'",
+   "fieldname": "base_operating_cost",
+   "fieldtype": "Currency",
+   "label": "\u57fa\u672c\u64cd\u4f5c\u6210\u672c(\u516c\u53f8\u8d27\u5e01)",
+   "options": "Company:company:default_currency",
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_11",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fetch_from": "operation.batch_size",
+   "fetch_if_empty": 1,
+   "fieldname": "batch_size",
+   "fieldtype": "Int",
+   "label": "\u6279\u91cf\u5927\u5c0f"
+  },
+  {
+   "default": "0",
+   "fieldname": "set_cost_based_on_bom_qty",
+   "fieldtype": "Check",
+   "label": "\u57fa\u4e8eBOM\u6570\u91cf\u8bbe\u7f6e\u64cd\u4f5c\u6210\u672c"
+  },
+  {
+   "depends_on": "eval:doc.batch_size > 0 && doc.set_cost_based_on_bom_qty",
+   "fieldname": "cost_per_unit",
+   "fieldtype": "Float",
+   "label": "\u5355\u4f4d\u6210\u672c",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "base_cost_per_unit",
+   "fieldtype": "Float",
+   "hidden": 1,
+   "label": "\u57fa\u672c\u5355\u4f4d\u6210\u672c",
+   "no_copy": 1,
+   "print_hide": 1,
+   "read_only": 1
+  },
+  {
+   "fieldname": "more_information_section",
+   "fieldtype": "Section Break",
+   "label": "\u66f4\u591a\u4fe1\u606f"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text Editor",
+   "in_list_view": 1,
+   "label": "\u63cf\u8ff0",
+   "oldfieldname": "opn_description",
+   "oldfieldtype": "Text"
+  },
+  {
+   "fieldname": "column_break_18",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "image",
+   "fieldtype": "Attach",
+   "label": "\u56fe\u50cf"
+  },
+  {
+   "fieldname": "\u5de5\u5382",
+   "fieldtype": "Link",
+   "label": "\u5de5\u5382",
+   "options": "RG Factory"
+  }
+ ],
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-05-04 00:29:26.226421",
+ "modified_by": "Administrator",
+ "module": "Rongguan Erp",
+ "name": "RG BOM Operation",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
