@@ -82,6 +82,8 @@ def saveRGProductionOrder(doc):
 			"delivery_date": doc.get("deliveryDate"), # 映射交货日期
 			"contract_number": doc.get("contractNumber"), # 映射合同号
 			"merchandiser": doc.get("followerId"), # 映射跟单员ID
+			"paper_pattern_maker_id": doc.get("paperPatternMakerId"), # 映射纸样员ID
+			"mark": doc.get("mark"), # 映射备注
 			"salesperson": doc.get("salesId"), # 映射销售员ID
 			"pattern_number": doc.get("patternNumber"), # 映射纸样号
 			"national_order": doc.get("countryCode"), # 映射国家单 (根据字段名猜测)

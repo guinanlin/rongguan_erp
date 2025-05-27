@@ -2,7 +2,7 @@
  "actions": [],
  "allow_rename": 1,
  "autoname": "format:POM-{#####}",
- "creation": "2025-05-03 17:26:09.452342",
+ "creation": "2025-05-27 23:50:54.516675",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -28,10 +28,12 @@
   "merchandiser",
   "column_break_ldcu",
   "salesperson",
+  "paper_pattern_maker_id",
   "section_break_apva",
   "column_break_5",
   "pattern_number",
   "national_order",
+  "mark",
   "column_break_6",
   "factory",
   "image",
@@ -60,14 +62,14 @@
   "\u5de5\u827a\u8def\u7ebf",
   "operations_section_section",
   "operations",
-  "amended_from",
   "\u9762\u6599\u8f85\u6599\u914d\u8272_tab",
   "table_mbev",
   "\u56fe\u793a_tab",
   "front_picture",
   "backend_picture",
   "trademark_position_diagram_picture",
-  "origin_label_size_label"
+  "origin_label_size_label",
+  "amended_from"
  ],
  "fields": [
   {
@@ -317,16 +319,6 @@
    "label": "\u670d\u88c5\u5de5\u827a"
   },
   {
-   "fieldname": "amended_from",
-   "fieldtype": "Link",
-   "label": "Amended From",
-   "no_copy": 1,
-   "options": "RG Production Orders",
-   "print_hide": 1,
-   "read_only": 1,
-   "search_index": 1
-  },
-  {
    "fieldname": "departure_date",
    "fieldtype": "Date",
    "label": "\u79bb\u5382\u671f"
@@ -403,18 +395,39 @@
    "fieldname": "origin_label_size_label",
    "fieldtype": "Attach Image",
    "label": "\u4ea7\u5730\u6807/\u5c3a\u7801\u6807"
+  },
+  {
+   "fieldname": "mark",
+   "fieldtype": "Data",
+   "label": "\u5907\u6ce8"
+  },
+  {
+   "fieldname": "paper_pattern_maker_id",
+   "fieldtype": "Link",
+   "label": "\u7eb8\u6837\u5458ID",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "RG Production Orders",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-05-17 01:16:00.932371",
+ "modified": "2025-05-28 00:04:42.277128",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "RG Production Orders",
  "naming_rule": "Expression",
- "owner": "guinan.lin@foxmail.com",
+ "owner": "Administrator",
  "permissions": [
   {
    "create": 1,
