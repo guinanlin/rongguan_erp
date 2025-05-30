@@ -2,6 +2,9 @@
 # Whitelisted for API access
 import frappe
 from frappe import _
+import json
+from erpnext.controllers.item_variant import create_variant
+
 
 # bench --site site1.local execute rongguan_erp.utils.api.items.get_items_with_attributes --kwargs '{"filters": {"item_group": "成品"}}'
 @frappe.whitelist(allow_guest=False)  # 确保只允许认证用户访问
@@ -137,3 +140,87 @@ def get_boms_by_item_group(item_group_name):
         result.append(result_item)
 
     return result
+
+# file: rongguan_erp/utils/api/items.py
+# 示例用法:
+# bench --site site1.local execute rongguan_erp.utils.api.items.create_style_number_number_by_custom_item_code --kwargs '{"item_data": {"doctype": "Item", "item_code": "A013", "item_name": "测xx224", "item_group": "成品", "stock_uom": "件", "has_variants": 1, "attributes": [{"attribute": "颜色", "attribute_value": "颜色"}, {"attribute": "尺寸", "attribute_value": "荣冠尺码"}]}}'
+# 返回结果:
+# {"item_code": "A013", "item_name": "\u6d4bxx224", "message": "Item created successfully with custom item_code"}
+@frappe.whitelist()
+def create_style_number_number_by_custom_item_code(item_data):
+    if isinstance(item_data, str):
+        try:
+            item_data = json.loads(item_data)
+        except json.JSONDecodeError:
+             frappe.throw(_("Invalid JSON input."))
+
+    if not isinstance(item_data, dict):
+        frappe.throw(_("Invalid input. Expected a dictionary."))
+
+    if item_data.get("doctype") != "Item":
+         frappe.throw(_("Invalid doctype specified. Must be 'Item'."))
+
+    # 检查是否是变体物料
+    has_variants = item_data.get("has_variants")
+    variant_of = item_data.get("variant_of")
+    provided_item_code = item_data.get("item_code")
+    attachment_urls = item_data.get("attachment_urls", [])  # 获取多个附件 URL，默认为空列表
+
+    if has_variants or variant_of:  # 如果是变体相关的物料
+        if provided_item_code:
+            try:
+                # 设置标志以禁用自动命名
+                frappe.flags.in_import = True
+                
+                doc = frappe.get_doc(item_data)
+                doc.name = provided_item_code
+                doc.item_code = provided_item_code
+                doc.insert(ignore_if_duplicate=True)
+                
+                # 处理多个附件
+                for url in attachment_urls:
+                    file_doc = frappe.get_doc({
+                        "doctype": "File",
+                        "file_url": url,
+                        "attached_to_doctype": "Item",
+                        "attached_to_name": doc.name,
+                        "folder": "Home/Attachments"
+                    })
+                    file_doc.insert()
+                
+                # 重置标志
+                frappe.flags.in_import = False
+                
+                frappe.db.commit()
+                return {
+                    "item_code": doc.name,
+                    "item_name": doc.item_name,
+                    "message": _("Item created successfully with custom item_code")
+                }
+            except Exception as e:
+                frappe.db.rollback()
+                frappe.flags.in_import = False
+                frappe.throw(_("Failed to create Item: {0}").format(str(e)))
+    
+    # 对于非变体物料，使用默认的自动命名
+    doc = frappe.get_doc(item_data)
+    doc.insert()
+    
+    # 处理多个附件
+    for url in attachment_urls:
+        file_doc = frappe.get_doc({
+            "doctype": "File",
+            "file_url": url,
+            "attached_to_doctype": "Item",
+            "attached_to_name": doc.name,
+            "folder": "Home/Attachments"
+        })
+        file_doc.insert()
+    
+    frappe.db.commit()
+    
+    return {
+        "item_code": doc.name,
+        "item_name": doc.item_name,
+        "message": _("Item created successfully with auto-generated item_code")
+    }
