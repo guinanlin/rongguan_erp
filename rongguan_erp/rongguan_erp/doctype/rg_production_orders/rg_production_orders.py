@@ -250,7 +250,7 @@ def bulk_add_items_from_data(item_data):
 		for size, qty in sizes.items():
 			if qty and int(qty) != 0:
 				# 构建 Item 代码
-				item_code = f"FG-{code}-{color}-{size}"
+				item_code = f"{code}-{color}-{size}"
 				
 				# 检查 Item 是否已经存在
 				if frappe.db.exists("Item", item_code):
@@ -274,6 +274,7 @@ def bulk_add_items_from_data(item_data):
 					"default_qty": int(qty),
 					"item_group": item_group  # 使用从数据中获取的 item_group 或默认值
 				}
+				print(f"item_variant: {item_variant}")
 				items_to_create.append(item_variant)
 	
 	# 调用 bulk_create_items 接口进行批量创建

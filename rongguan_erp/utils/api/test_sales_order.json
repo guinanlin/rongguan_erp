@@ -1,0 +1,49 @@
+{
+    "name": "SO-2023-0001", 
+    "attachments": [],
+    "company": "DTY",
+    "conversion_rate": 1,
+    "cost_center": "",
+    "currency": "CNY",
+    "customer": "GZ-NOOS",
+    "delivery_date": "2025-06-01",
+    "doctype": "Sales Order",
+    "taxes": [
+        {
+            "account_head": "6601004 - 办公费 - D",
+            "description": "生产运费",
+            "tax_amount": 50,
+            "charge_type": "Actual"
+        }
+    ],
+    "follower_id": "HR-EMP-00003",
+    "follower_name": "4@4.com",
+    "items": [
+        {
+            "doctype": "Item",
+            "item_code": "25-054-粉粉-36#",
+            "item_name": "25-054 (粉粉, 36#)",
+            "description": "圆领落开衫 (粉粉, 32#)",
+            "variant_of": "25-054",
+            "item_group": "成品",
+            "uom": "件",
+            "stock_uom": "件",
+            "has_variants": 0,
+            "attributes": [
+                {"attribute": "XSD专属定义颜色", "attribute_value": "粉粉"},
+                {"attribute": "荣冠尺码", "attribute_value": "36#"}
+            ],
+            "qty": 131,
+            "default_qty": 131,
+            "rate": 10
+        }
+    ],
+    "order_type": "Sales",
+    "plc_conversion_rate": 1,
+    "po_no": "",
+    "price_list_currency": "CNY",
+    "remarks": "",
+    "selling_price_list": "标准销售",
+    "status": "Draft",
+    "transaction_date": "2025-06-01"
+}

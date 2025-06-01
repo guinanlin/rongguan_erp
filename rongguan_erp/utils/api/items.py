@@ -224,3 +224,59 @@ def create_style_number_number_by_custom_item_code(item_data):
         "item_name": doc.item_name,
         "message": _("Item created successfully with auto-generated item_code")
     }
+
+
+@frappe.whitelist()
+def get_item_color_values(item_code):
+    if not item_code:
+        return {"error": "item_code is required"}
+
+    item = frappe.get_doc("Item", item_code)
+
+    color_attributes = []
+
+    for attr in item.attributes:
+        try:
+            attr_doc = frappe.get_doc("Item Attribute", attr.attribute)
+            if attr_doc._user_tags and "颜色" in attr_doc._user_tags:
+                color_values = [v.attribute_value for v in attr_doc.item_attribute_values]
+                color_attributes.append({
+                    "attribute": attr.attribute,
+                    "values": color_values
+                })
+        except frappe.DoesNotExistError:
+            continue
+
+    if not color_attributes:
+        return {"error": "No attribute with tag '颜色' found for this item"}
+
+    return {
+        "color_attributes": color_attributes
+    }    
+@frappe.whitelist()
+def get_item_size_values(item_code):
+    if not item_code:
+        return {"error": "item_code is required"}
+
+    item = frappe.get_doc("Item", item_code)
+
+    size_attributes = []
+
+    for attr in item.attributes:
+        try:
+            attr_doc = frappe.get_doc("Item Attribute", attr.attribute)
+            if attr_doc._user_tags and "尺寸" in attr_doc._user_tags:
+                size_values = [v.attribute_value for v in attr_doc.item_attribute_values]
+                size_attributes.append({
+                    "attribute": attr.attribute,
+                    "values": size_values
+                })
+        except frappe.DoesNotExistError:
+            continue
+
+    if not size_attributes:
+        return {"error": "No attribute with tag '荣冠尺码' found for this item"}
+
+    return {
+        "size_attributes": size_attributes
+    }    
