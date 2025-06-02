@@ -19,24 +19,41 @@ def save_sales_order(order_data=None, *args, **kwargs):
             try:
                 order_data = json.loads(order_data)
             except json.JSONDecodeError:
-                frappe.throw(_("Invalid JSON input"))
+                return {
+                    "error": _("Invalid JSON input")
+                }
 
         if not isinstance(order_data, dict):
-            frappe.throw(_("Invalid input format. Expected dict or JSON string"))
+            return {
+                "error": _("Invalid input format. Expected dict or JSON string")
+            }
 
         print("Received order_data:", order_data)
         order_data["doctype"] = "Sales Order"
         print(f"Final order_data: {order_data}")
 
         if order_data.get("doctype") != "Sales Order":
-            frappe.throw(_("Invalid doctype specified. Must be 'Sales Order'."))
+            return {
+                "error": _("Invalid doctype specified. Must be 'Sales Order'.")
+            }
 
         if not frappe.db.exists("Customer", order_data.get("customer")):
-            frappe.throw(_("Customer '{0}' does not exist.").format(order_data.get("customer")))
+            return {
+                "error": _("客户 '{0}' 不存在").format(order_data.get("customer"))
+            }
 
+        # 检查公司字段
+        if not order_data.get("company"):
+            # frappe.throw("公司名称不能为空")
+            return {
+                "error": _("公司名称不能为空")                    
+            }
+        
         # 验证公司是否存在
-        if not frappe.db.exists("Company", order_data.get("company")):
-            frappe.throw(_("公司 '{0}' 不存在").format(order_data.get("company")))
+        if not frappe.db.exists("Company", order_data["company"]):
+            return {
+                "error": _("公司 '{0}' 不存在").format(order_data["company"])
+            }
 
         # 1. 批量创建商品（items）
         items = order_data.get("items", [])
