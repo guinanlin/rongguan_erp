@@ -5,8 +5,6 @@ from rongguan_erp.utils.api.sales_order import save_sales_order
 from pathlib import Path
 
 # bench run-tests --module rongguan_erp.utils.api.test_sales_order
-# bench run-tests --module rongguan_erp.utils.api.test_sales_order --site site1.local
-
 # 读取 JSON 文件
 test_data_path = Path(__file__).parent / "test_sales_order.json"
 with open(test_data_path, "r", encoding="utf-8") as f:
@@ -47,8 +45,11 @@ class TestSalesOrder(unittest.TestCase):
         """测试销售订单创建"""
         self.order_data["name"] = self.generate_order_number()
         result = save_sales_order(self.order_data)
-        self.assertTrue(frappe.db.exists("Sales Order", result.get("name")))
-        print("✅ 销售订单创建成功:", result)
+        # 输出 result 的内容
+        print("✅ 返回值 result:", result)
+        # 从返回值的 "data" 字段中获取 name
+        self.assertTrue(frappe.db.exists("Sales Order", result["data"]["name"]))
+        print("✅ 销售订单创建成功:", result["data"]["name"])
 
     # def test_invalid_input(self):
     #     """测试无效输入"""
