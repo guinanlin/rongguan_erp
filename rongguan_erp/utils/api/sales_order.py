@@ -34,6 +34,10 @@ def save_sales_order(order_data=None, *args, **kwargs):
         if not frappe.db.exists("Customer", order_data.get("customer")):
             frappe.throw(_("Customer '{0}' does not exist.").format(order_data.get("customer")))
 
+        # 验证公司是否存在
+        if not frappe.db.exists("Company", order_data.get("company")):
+            frappe.throw(_("公司 '{0}' 不存在").format(order_data.get("company")))
+
         # 1. 批量创建商品（items）
         items = order_data.get("items", [])
         if items:
