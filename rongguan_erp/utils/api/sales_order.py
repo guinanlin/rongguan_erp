@@ -231,7 +231,7 @@ def save_sales_order(order_data=None, *args, **kwargs):
             so.insert(ignore_permissions=True)
             
             # 提交销售订单的保存
-            frappe.db.commit()
+            # frappe.db.commit() # 移除此行，将在生产订单创建后统一提交
 
             # 尝试构建生产订单数据并保存
             production_order_name = None
@@ -244,13 +244,20 @@ def save_sales_order(order_data=None, *args, **kwargs):
 
                 if production_order_result.get("error"):
                     production_order_message = _("销售订单创建成功，但生产制造工单创建失败: {0}").format(production_order_result["error"])
-                    frappe.log_error(production_order_message, "RG Production Order Creation Failed after Sales Order Success")
+                    # 如果生产订单创建失败，回滚整个事务
+                    frappe.db.rollback()
+                    frappe.throw(_("销售订单和生产制造工单未能全部创建成功: {0}").format(production_order_result["error"]))
                 else:
                     production_order_name = production_order_result["data"]["name"]
 
             except Exception as e:
                 production_order_message = _("销售订单创建成功，但在尝试创建生产制造工单时发生未知错误: {0}").format(str(e))
-                frappe.log_error(frappe.get_traceback(), "Unexpected Error during RG Production Order Creation Attempt")
+                # 如果尝试创建生产订单时发生异常，回滚整个事务
+                frappe.db.rollback()
+                frappe.throw(_("销售订单和生产制造工单未能全部创建成功: {0}").format(str(e)))
+
+            # 只有当销售订单和生产制造工单都成功创建后，才提交事务
+            frappe.db.commit()
 
             return {
                 "data": {
@@ -264,16 +271,15 @@ def save_sales_order(order_data=None, *args, **kwargs):
         except Exception as e:
             # 捕获创建销售订单阶段的错误（如 DuplicateEntryError），此时尚未提交，需要回滚
             frappe.db.rollback()
-            frappe.log_error(frappe.get_traceback(), "Sales Order Creation Failed Before Commit")
             # 重新抛出捕获到的异常
             frappe.throw(_("创建销售订单失败: {0}").format(str(e)))
 
     except BrokenPipeError:
-        frappe.log_error("客户端断开连接", "BrokenPipeError in save_sales_order")
+        # frappe.log_error("客户端断开连接", "BrokenPipeError in save_sales_order")
         return {"error": "请求中断"}
     except Exception as e:
         # 捕获顶层未处理的异常（在任何事务操作之前）
-        frappe.log_error(frappe.get_traceback(), "General Error in save_sales_order")
+        # frappe.log_error(frappe.get_traceback(), "General Error in save_sales_order")
         raise # 重新抛出异常
 
 @frappe.whitelist(allow_guest=False)
@@ -306,7 +312,7 @@ def save_to_rg_production_orders(production_order_data):
             }
         }
     except Exception as e:
-        frappe.log_error(frappe.get_traceback(), "Failed to save RG Production Order")
+        # frappe.log_error(frappe.get_traceback(), "Failed to save RG Production Order")
         return {
             "error": _("Failed to save RG Production Order: {0}").format(str(e))
         }
@@ -314,9 +320,4 @@ def save_to_rg_production_orders(production_order_data):
 # Cursor Rule: 600-how-test-so-2-rg
 # Description: Steps to test sales order to production order mapping
 # 1. Ensure the sales order data includes valid items with attributes (color, size).
-# 2. Call `save_sales_order` with the order data.
-# 3. Verify the sales order is created successfully.
-# 4. Check the production order data is correctly mapped and saved.
-# 5. Debug any issues by logging intermediate data (e.g., `production_order_data`).
-# 6. Validate the production order status and fields (businessType, orderType, etc.).
-
+# 2. Call `save_sales_order`
