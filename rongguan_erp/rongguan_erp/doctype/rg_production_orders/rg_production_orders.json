@@ -2,7 +2,7 @@
  "actions": [],
  "allow_rename": 1,
  "autoname": "format:POM-{#####}",
- "creation": "2025-05-27 23:50:54.516675",
+ "creation": "2025-06-06 17:00:01.274548",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -36,7 +36,6 @@
   "mark",
   "column_break_6",
   "factory",
-  "image",
   "production_item_tab",
   "item_info_section",
   "item",
@@ -127,11 +126,6 @@
   {
    "fieldname": "column_break_5",
    "fieldtype": "Column Break"
-  },
-  {
-   "fieldname": "image",
-   "fieldtype": "Attach",
-   "label": "\u56fe\u7247"
   },
   {
    "fieldname": "delivery_date",
@@ -422,7 +416,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-05-28 00:04:42.277128",
+ "modified": "2025-06-06 17:00:39.311773",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "RG Production Orders",

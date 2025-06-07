@@ -1,0 +1,47 @@
+{
+    "notificationNumber": "PO-TEST-001",
+    "customerId": "GZ-NOOS",
+    "businessType": "外贸",
+    "orderType": "样衣",
+    "orderNumber": "SO2506-1748765851203-3159",
+    "factoryDeadline": "2025-07-03",
+    "productName": "2025年新款-2025年新款连衣裙",
+    "orderStatus": "待处理",
+    "orderDate": "2025-06-01",
+    "deliveryDate": "2025-06-26",
+    "contractNumber": "",
+    "followerId": "HR-EMP-00002",
+    "paperPatternMakerId": "HR-EMP-00001",
+    "mark": "",
+    "salesId": "",
+    "patternNumber": "",
+    "countryCode": "",
+    "factoryId": "",
+    "quantity": "",
+    "processLine": "11号工艺路线",
+    "displayImageData": {
+        "front": {"file_url": ""},
+        "back": {"file_url": ""},
+        "brandLabel": {"file_url": ""},
+        "washLabel": {"file_url": ""}
+    },
+    "materialData": {
+        "itemGroup": "Finished Goods",
+        "selectedColorChart": {"name": "XSD专属定义颜色"},
+        "selectedSizeChart": {"name": "荣冠尺码"},
+        "materialList": [
+            {
+                "code": "FG-25-054-大金-46#",
+                "color": "XSD专属定义颜色",
+                "unit": "件",
+                "sizes": {"46#": 10}
+            },
+            {
+                "code": "FG-25-054-大金-48#",
+                "color": "XSD专属定义颜色",
+                "unit": "件",
+                "sizes": {"48#": 30}
+            }
+        ]
+    }
+} 
