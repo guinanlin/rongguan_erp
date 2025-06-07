@@ -88,6 +88,17 @@ def map_sales_order_to_production_order(so, items_data):
             "sizes": {size: item_dict.get("qty", 0)}  # 尺码及数量
         })
 
+    # 提取第一个物料的颜色和尺码作为默认的颜色图表和尺码图表
+    first_item_color = ""
+    first_item_size = ""
+    if items_data:
+        color_attr = next((attr['attribute_value'] for attr in items_data[0].get('attributes', [])
+                           if attr.get('attribute') == 'XSD专属定义颜色'), '')
+        size_attr = next((attr['attribute_value'] for attr in items_data[0].get('attributes', [])
+                          if attr.get('attribute') == '荣冠尺码'), '')
+        first_item_color = color_attr if color_attr else "XSD专属定义颜色"
+        first_item_size = size_attr if size_attr else "荣冠尺码"
+
     # 构建生产订单数据
     production_order_data = {
         "notificationNumber": so.name,  # 通知单号（使用销售订单号）
@@ -102,8 +113,8 @@ def map_sales_order_to_production_order(so, items_data):
         "orderType": "大货",  # 订单类型
         "materialData": {
             "materialList": material_list,
-            "selectedColorChart": {"name": "XSD专属定义颜色"},  # Use actual attribute name
-            "selectedSizeChart": {"name": "荣冠尺码"}     # Use actual attribute name
+            "selectedColorChart": {"name": first_item_color},  # Use actual attribute name
+            "selectedSizeChart": {"name": first_item_size}     # Use actual attribute name
         },
         "processSteps": [],  # 可以为空
         "displayImageData": {},  # 可以为空
