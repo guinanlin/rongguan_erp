@@ -30,8 +30,8 @@
             "stock_uom": "件",
             "has_variants": 0,
             "attributes": [
-                {"attribute": "XSD专属定义颜色", "attribute_value": "粉粉"},
-                {"attribute": "荣冠尺码", "attribute_value": "36#"}
+                {"attribute_type": "color", "attribute": "XSD专属定义颜色", "attribute_value": "粉粉"},
+                {"attribute_type": "size", "attribute": "荣冠尺码", "attribute_value": "36#"}
             ],
             "qty": 131,
             "default_qty": 131,

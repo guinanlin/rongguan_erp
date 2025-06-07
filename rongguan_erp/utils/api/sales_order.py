@@ -7,56 +7,6 @@ import time
 from rongguan_erp.rongguan_erp.doctype.rg_production_orders.rg_production_orders import saveRGProductionOrder
 from rongguan_erp.rongguan_erp.doctype.rg_production_orders.rg_production_orders_model import get_default_production_order_data
 
-def build_production_order_data(so):
-    """
-    从销售订单构建生产制造工单所需的数据字典
-    
-    参数:
-        so (frappe.model.document.Document): 销售订单文档对象
-    
-    返回:
-        dict: 生产制造工单所需的数据字典
-    """
-    # 尝试获取颜色和尺码属性
-    def get_item_attributes(item):
-        color = next((attr['attribute_value'] for attr in item.get('attributes', []) 
-                      if attr.get('attribute') == 'XSD专属定义颜色'), '')
-        size = next((attr['attribute_value'] for attr in item.get('attributes', []) 
-                     if attr.get('attribute') == '荣冠尺码'), '')
-        return color, size
-
-    # 构建物料数据
-    material_list = []
-    for item in so.items:
-        color, size = get_item_attributes(item)
-        material_list.append({
-            "code": item.variant_of,  # 使用 variant_of 作为基础款号
-            "color": color,  # 颜色属性
-            "unit": item.uom,
-            "sizes": {size: item.qty}  # 使用尺码作为 sizes 的键
-        })
-
-    production_order_data = {
-        "notificationNumber": so.name,  # 使用销售订单号作为通知单号
-        "customerId": so.customer,  # 客户ID
-        "orderNumber": so.name,  # 订单号
-        "orderDate": so.transaction_date,  # 订单日期
-        "deliveryDate": so.delivery_date,  # 交货日期
-        "quantity": sum(item.qty for item in so.items),  # 总数量
-        "productName": so.items[0].variant_of if so.items else "",  # 使用 variant_of 作为产品名称, 避免列表为空
-        "businessType": "销售订单",  # 业务类型
-        "orderStatus": "已创建",  # 初始状态
-        "orderType": "大货",  # 订单类型
-        "materialData": {
-            "materialList": material_list,
-            "selectedColorChart": {"name": "A000443"},  # 默认颜色属性
-            "selectedSizeChart": {"name": "test09"}  # 默认尺码属性
-        },
-        "processSteps": [],  # 可以为空，或者根据需要添加默认工序
-        "displayImageData": {},  # 可以为空
-        "attachments": []  # 可以为空
-    }
-    return production_order_data
 
 def map_sales_order_to_production_order(so, items_data):
     """
@@ -69,18 +19,32 @@ def map_sales_order_to_production_order(so, items_data):
     返回:
         dict: 生产订单所需的数据字典
     """
+    print("Items Data:", json.dumps(items_data, indent=2, ensure_ascii=False))
     # 尝试获取颜色和尺码属性
     def get_item_attributes(item_dict):
+        """
+        从物料字典中提取颜色和尺码属性
+        
+        参数:
+            item_dict (dict): 物料字典
+        
+        返回:
+            tuple: (颜色, 尺码)
+        """
         color = next((attr['attribute_value'] for attr in item_dict.get('attributes', [])
-                      if attr.get('attribute') == 'XSD专属定义颜色'), '')
+                       if attr.get('attribute_type') == 'color'), None)
         size = next((attr['attribute_value'] for attr in item_dict.get('attributes', [])
-                     if attr.get('attribute') == '荣冠尺码'), '')
+                      if attr.get('attribute_type') == 'size'), None)
         return color, size
 
     # 构建物料数据
     material_list = []
     for item_dict in items_data:
         color, size = get_item_attributes(item_dict)
+        print("Item Code:", item_dict.get("item_code", ""))
+        print("Color:", color, "Size:", size)
+        if not color or not size:
+            frappe.throw(_("颜色或尺码属性为空，请检查销售订单数据"))
         material_list.append({
             "code": item_dict.get("item_code", ""),  # Use actual item_code
             "color": color,          # 颜色
@@ -294,10 +258,18 @@ def save_to_rg_production_orders(production_order_data):
         dict: 保存结果
     """
     try:
+        # 检查颜色和尺码属性是否存在
+        material_list = production_order_data.get("materialData", {}).get("materialList", [])
+        for material in material_list:
+            color = material.get("color", "默认颜色")
+            size = next(iter(material.get("sizes", {}).keys()), "默认尺码") if material.get("sizes") else "默认尺码"
+
+            # 如果颜色或尺码为空，抛出异常
+            if not color or not size:
+                frappe.throw(_("颜色或尺码属性为空，请检查销售订单数据"))
+
         # 获取默认数据结构并用传入的数据更新
         full_production_order_data = get_default_production_order_data(production_order_data)
-
-        # 可以在这里添加更详细的数据验证或处理逻辑，例如检查必填字段
 
         # 调用 saveRGProductionOrder 方法保存文档
         result = saveRGProductionOrder(full_production_order_data)
@@ -312,7 +284,6 @@ def save_to_rg_production_orders(production_order_data):
             }
         }
     except Exception as e:
-        # frappe.log_error(frappe.get_traceback(), "Failed to save RG Production Order")
         return {
             "error": _("Failed to save RG Production Order: {0}").format(str(e))
         }
