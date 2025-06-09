@@ -64,6 +64,13 @@ def map_sales_order_to_production_order(so, items_data):
         first_item_size = size_attr if size_attr else "荣冠尺码"
 
     # 构建生产订单数据
+    order_type_mapping = {
+        "Sales": "大货",  # 示例映射，可以根据实际业务需求添加更多映射
+        # "Sales Sample": "销售样", # 假设销售订单的销售样类型对应生产订单的销售样
+        # "Garment Sample": "样衣", # 假设销售订单的样衣类型对应生产订单的样衣
+    }
+    production_order_type = order_type_mapping.get(so.order_type, "大货") # 默认映射为"大货"
+
     production_order_data = {
         "notificationNumber": so.name,  # 通知单号（使用销售订单号）
         "customerId": so.customer,      # 客户ID
@@ -72,9 +79,9 @@ def map_sales_order_to_production_order(so, items_data):
         "deliveryDate": so.delivery_date,  # 交货日期
         "quantity": so.total_qty,       # 总数量
         "productName": items_data[0].get("variant_of", "") if items_data else "",  # Use variant_of as product name from items_data
-        "businessType": "内贸",  # 业务类型
+        "businessType": so.business_type,  # 业务类型
         "orderStatus": "待处理",  # 初始状态
-        "orderType": "大货",  # 订单类型
+        "orderType": production_order_type,  # 订单类型，映射后的值
         "materialData": {
             "materialList": material_list,
             "selectedColorChart": {"name": first_item_color},  # Use actual attribute name
