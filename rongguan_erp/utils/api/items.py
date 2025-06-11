@@ -143,9 +143,113 @@ def get_boms_by_item_group(item_group_name):
 
 # file: rongguan_erp/utils/api/items.py
 # 示例用法:
+# bench --site site1.local execute rongguan_erp.utils.api.items.get_items_with_attributes_with_pagination --kwargs '{"filters": {"item_group": "成品"}, "page_number": 1, "page_size": 10}'
+@frappe.whitelist(allow_guest=False)
+def get_items_with_attributes_with_pagination(filters=None, fields=None, page_number=1, page_size=20):
+    # 输出所有输入的参数
+    print(f"Input parameters: filters={filters}, fields={fields}, page_number={page_number}, page_size={page_size}")
+
+    # 强制将 filters 参数（如果它是字符串的话）通过 json.loads() 转换为正确的 Python 对象
+    # 考虑到 Frappe 可能将 URL 参数解析为字符列表，需要先将其拼接回字符串
+    if isinstance(filters, list) and all(isinstance(char, str) and len(char) == 1 for char in filters):
+        try:
+            filters_str = "".join(filters)
+            filters = json.loads(filters_str)
+        except json.JSONDecodeError:
+            frappe.throw(_("Invalid JSON format for filters after reconstruction."))
+        except Exception as e:
+            frappe.log_error(f"Error reconstructing or parsing filters: {e}", "Filters Reconstruction Error")
+            frappe.throw(_("An error occurred while processing filters."))
+    elif isinstance(filters, str):
+        try:
+            filters = json.loads(filters)
+        except json.JSONDecodeError:
+            frappe.throw(_("Invalid JSON format for filters."))
+
+    if not filters:
+        filters = {}
+
+    page_number = int(page_number)
+    page_size = int(page_size)
+
+    if page_number < 1:
+        page_number = 1
+    if page_size < 1:
+        page_size = 20
+
+    # 获取总条目数
+    print(f"filters (after json.loads and reconstruction)===========: {filters}")
+    total_items = frappe.db.count('Item', filters=filters)
+    print(f"total_items===========: {total_items}")
+    
+    # 计算总页数
+    total_pages = (total_items + page_size - 1) // page_size
+
+    # 计算偏移量
+    offset = (page_number - 1) * page_size
+
+    items = frappe.get_all(
+        'Item',
+        filters=filters,
+        fields=fields or ["*"],
+        limit_page_length=page_size,
+        limit_start=offset,
+        pluck='name'
+    )
+
+    result_data = []
+    for item in items:
+        doc = frappe.get_doc('Item', item)
+        data = doc.as_dict()
+        
+        # 初始化一个空列表来存放处理后的属性
+        processed_attributes = []
+        for attr_doc in doc.attributes:
+            attr_dict = attr_doc.as_dict()  # 将 ItemVariantAttribute 对象转换为字典
+            try:
+                item_attribute_doc = frappe.get_doc("Item Attribute", attr_dict.get("attribute"))
+                attr_dict["_user_tags"] = item_attribute_doc._user_tags
+            except frappe.DoesNotExistError:
+                attr_dict["_user_tags"] = ""
+            except Exception as e:
+                frappe.log_error(f"Error fetching _user_tags for Item Attribute {attr_dict.get('attribute')}: {e}", "Item Attribute Fetch Error")
+                attr_dict["_user_tags"] = ""
+
+            # 根据 _user_tags 判断 attribute_type
+            if attr_dict.get("_user_tags"):
+                if "颜色" in attr_dict["_user_tags"]:
+                    attr_dict["attribute_type"] = "color"
+                elif "尺寸" in attr_dict["_user_tags"]:
+                    attr_dict["attribute_type"] = "size"
+                else:
+                    attr_dict["attribute_type"] = ""
+            else:
+                attr_dict["attribute_type"] = ""
+
+            processed_attributes.append(attr_dict)
+        
+        data["attributes"] = processed_attributes # 用处理后的列表替换原始属性
+
+        result_data.append(data)
+    print(f"Result data===========: {total_items} {total_pages} {page_number} {page_size}")
+    pagination_info = {
+        "page_number": page_number,
+        "page_size": page_size,
+        "total_pages": total_pages,
+        "total_items": total_items
+    }
+
+    # 打印计算后的分页信息，用于调试
+    print(f"Calculated pagination info: page_number={page_number}, page_size={page_size}, total_pages={total_pages}, total_items={total_items}")
+
+    return {
+        "data": result_data,
+        "pagination": pagination_info
+    }
+
 # bench --site site1.local execute rongguan_erp.utils.api.items.create_style_number_number_by_custom_item_code --kwargs '{"item_data": {"doctype": "Item", "item_code": "A013", "item_name": "测xx224", "item_group": "成品", "stock_uom": "件", "has_variants": 1, "attributes": [{"attribute": "颜色", "attribute_value": "颜色"}, {"attribute": "尺寸", "attribute_value": "荣冠尺码"}]}}'
 # 返回结果:
-# {"item_code": "A013", "item_name": "\u6d4bxx224", "message": "Item created successfully with custom item_code"}
+# {"item_code": "A013", "item_name": "测xx224", "message": "Item created successfully with custom item_code"}
 @frappe.whitelist()
 def create_style_number_number_by_custom_item_code(item_data):
     if isinstance(item_data, str):
