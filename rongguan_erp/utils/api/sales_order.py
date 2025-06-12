@@ -307,7 +307,22 @@ def get_sales_order_detail(sales_order_number):
             return {"error": _("销售订单 '{0}' 不存在").format(sales_order_number)}
 
         sales_order = frappe.get_doc("Sales Order", sales_order_number)
-        
+
+        print(f"sales_order:============== {sales_order}")
+
+        # 根据销售订单的第一个物料获取variant_of
+        if not sales_order.items:
+            return {"error": _("销售订单 '{0}' 没有物料项").format(sales_order_number)}
+
+        first_item_code = sales_order.items[0].item_code
+        first_item_doc = frappe.get_doc("Item", first_item_code)
+        variant_of = first_item_doc.variant_of
+        print(f"variant_of:============== {variant_of}")
+
+        # 根据variant_of获取属性
+        styleItemRecord = frappe.get_doc("Item", variant_of)
+        print(f"styleItemRecord:============== {styleItemRecord}")
+        styleItem = { "item_name": styleItemRecord.item_name, "item_code": styleItemRecord.item_code }
         # 为每个物料获取属性
         items_with_attributes = []
         for item in sales_order.items:
@@ -341,7 +356,8 @@ def get_sales_order_detail(sales_order_number):
         return {
             "data": {
                 **sales_order.as_dict(),
-                "items": items_with_attributes
+                "items": items_with_attributes,
+                "styleItem": styleItem
             },
             "message": "Success",
             "success": True
