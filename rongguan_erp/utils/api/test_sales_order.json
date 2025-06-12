@@ -8,6 +8,7 @@
     "customer": "GZ-NOOS",
     "delivery_date": "2025-06-01",
     "doctype": "Sales Order",
+    "business_type": "内贸",
     "taxes": [
         {
             "account_head": "6601004 - 办公费 - D",

@@ -51,6 +51,18 @@ class TestSalesOrder(unittest.TestCase):
         self.assertTrue(frappe.db.exists("Sales Order", result["data"]["name"]))
         print("✅ 销售订单创建成功:", result["data"]["name"])
 
+    def test_get_sales_order_detail(self):
+        """测试获取销售订单详情"""
+        # 调用 get_sales_order_detail 方法
+        from rongguan_erp.utils.api.sales_order import get_sales_order_detail
+        detail_result = get_sales_order_detail("SO-25-0611-00001-00")
+        
+        # 验证返回结果
+        self.assertTrue(detail_result["success"])
+        self.assertEqual(detail_result["message"], "Success")
+        self.assertIsNotNone(detail_result["data"])
+        print(f"✅ 销售订单详情获取成功: {detail_result['data']['name']}")
+
     # def test_invalid_input(self):
     #     """测试无效输入"""
     #     with self.assertRaises(frappe.ValidationError):

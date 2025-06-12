@@ -93,6 +93,7 @@ def map_sales_order_to_production_order(so, items_data):
     }
     return production_order_data
 
+# bench execute rongguan_erp.utils.api.sales_order.save_sales_order --args '{"name": "SO-25-0611-00001-00"}'
 @frappe.whitelist(allow_guest=False)  # 确保只允许认证用户访问
 def save_sales_order(order_data=None, *args, **kwargs):
     try:
@@ -294,8 +295,66 @@ def save_to_rg_production_orders(production_order_data):
         return {
             "error": _("Failed to save RG Production Order: {0}").format(str(e))
         }
+# bench execute rongguan_erp.utils.api.sales_order.get_sales_order_detail --args '{"name": "SO-25-0611-00001-00"}'
+@frappe.whitelist(allow_guest=False)
+def get_sales_order_detail(sales_order_number):
+    """
+    根据销售订单号获取订单详情
+
+    参数:
+        sales_order_number (str): 销售订单号
+
+    返回:
+        dict: 销售订单详情或错误信息
+    """
+    try:
+        if not frappe.db.exists("Sales Order", sales_order_number):
+            return {"error": _("销售订单 '{0}' 不存在").format(sales_order_number)}
+
+        sales_order = frappe.get_doc("Sales Order", sales_order_number)
+        
+        # 为每个物料获取属性
+        items_with_attributes = []
+        for item in sales_order.items:
+            item_dict = item.as_dict()
+            # 从 ItemVariantAttribute 获取属性，它包含 'attribute' (name) 和 'attribute_value'
+            attributes = frappe.get_all(
+                "Item Variant Attribute",
+                filters={"parent": item.item_code},
+                fields=["attribute", "attribute_value"]
+            )
+            
+            # 获取每个属性的 _user_tags
+            enriched_attributes = []
+            for attr_item in attributes:
+                item_attribute_doc = frappe.get_doc("Item Attribute", attr_item["attribute"])
+                attr_item["_user_tags"] = item_attribute_doc.get("_user_tags")
+                
+                # 根据 _user_tags 设置 attribute_type
+                if attr_item["_user_tags"] and "颜色" in attr_item["_user_tags"]:
+                    attr_item["attribute_type"] = "color"
+                elif attr_item["_user_tags"] and "尺寸" in attr_item["_user_tags"]:
+                    attr_item["attribute_type"] = "size"
+                else:
+                    attr_item["attribute_type"] = ""
+
+                enriched_attributes.append(attr_item)
+
+            item_dict["attributes"] = enriched_attributes
+            items_with_attributes.append(item_dict)
+
+        return {
+            "data": {
+                **sales_order.as_dict(),
+                "items": items_with_attributes
+            },
+            "message": "Success",
+            "success": True
+        }
+    except Exception as e:
+        return {"error": str(e)}
 
 # Cursor Rule: 600-how-test-so-2-rg
 # Description: Steps to test sales order to production order mapping
 # 1. Ensure the sales order data includes valid items with attributes (color, size).
-# 2. Call `save_sales_order`
+# 2. Call `
