@@ -251,7 +251,7 @@ fixtures = [
     # },
     {
         "dt": "DocType",
-        "filters": [["name", "in", ["RG Production Orders"]]]
+        "filters": [["name", "in", ["RG Production Orders", "Sales Order"]]]
     },
     {
         "dt": "Workspace",
