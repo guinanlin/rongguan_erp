@@ -53,15 +53,9 @@ def map_sales_order_to_production_order(so, items_data):
         })
 
     # 提取第一个物料的颜色和尺码作为默认的颜色图表和尺码图表
-    first_item_color = ""
-    first_item_size = ""
-    if items_data:
-        color_attr = next((attr['attribute_value'] for attr in items_data[0].get('attributes', [])
-                           if attr.get('attribute') == 'XSD专属定义颜色'), '')
-        size_attr = next((attr['attribute_value'] for attr in items_data[0].get('attributes', [])
-                          if attr.get('attribute') == '荣冠尺码'), '')
-        first_item_color = color_attr if color_attr else "XSD专属定义颜色"
-        first_item_size = size_attr if size_attr else "荣冠尺码"
+    first_item_color = next((attr['attribute'] for attr in items_data[0].get('attributes', []) if attr.get('attribute_type') == 'color'), '')
+    first_item_size = next((attr['attribute'] for attr in items_data[0].get('attributes', []) if attr.get('attribute_type') == 'size'), '')
+
 
     # 构建生产订单数据
     order_type_mapping = {
@@ -278,6 +272,7 @@ def save_to_rg_production_orders(production_order_data):
 
         # 获取默认数据结构并用传入的数据更新
         full_production_order_data = get_default_production_order_data(production_order_data)
+        print(f"full_production_order_data:============== {full_production_order_data}")
 
         # 调用 saveRGProductionOrder 方法保存文档
         result = saveRGProductionOrder(full_production_order_data)

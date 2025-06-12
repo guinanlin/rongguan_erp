@@ -227,11 +227,12 @@ def bulk_add_items_from_data(item_data):
 		item_data = json.loads(item_data)
 	
 	# 如果输入是字典且包含 materialList 字段，则提取该字段
+	print(f"item_data:============== {item_data}")
 	if isinstance(item_data, dict) and "materialList" in item_data:
 		items = item_data.get("materialList", [])
 		item_group = item_data.get("itemGroup", "成品")
-		color_attribute = item_data.get("selectedColorChart", {}).get("name", "XSD专属定义颜色")
-		size_attribute = item_data.get("selectedSizeChart", {}).get("name", "荣冠尺码")
+		color_attribute = item_data.get("selectedColorChart", {}).get("name", "")
+		size_attribute = item_data.get("selectedSizeChart", {}).get("name", "")
 	else:
 		items = item_data
 		item_group = "成品"
