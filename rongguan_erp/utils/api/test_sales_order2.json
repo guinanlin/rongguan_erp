@@ -1,0 +1,96 @@
+{
+    "doctype": "Sales Order",
+    "name": "SO-250614-63130-93",
+    "customer": "test344",
+    "order_type": "Sales",
+    "custom_业务类型_": "外贸",
+    "business_type": "外贸",
+    "transaction_date": "2025-06-14",
+    "delivery_date": "2025-06-14",
+    "company": "DTY",
+    "currency": "CNY",
+    "conversion_rate": 1,
+    "selling_price_list": "标准销售",
+    "price_list_currency": "CNY",
+    "plc_conversion_rate": 1,
+    "status": "Draft",
+    "po_no": "",
+    "cost_center": "",
+    "items": [
+        {
+            "doctype": "Item",
+            "item_code": "Lin02-A-0",
+            "item_name": "Lin02 (A, 0)",
+            "description": "Lin02 (A, 0)",
+            "variant_of": "Lin02",
+            "item_group": "成品",
+            "uom": "件",
+            "stock_uom": "件",
+            "has_variants": 0,
+            "attributes": [
+                {
+                    "attribute_type": "color",
+                    "attribute": "B45",
+                    "attribute_value": "A"
+                },
+                {
+                    "attribute_type": "size",
+                    "attribute": "DL-00-20",
+                    "attribute_value": "0"
+                }
+            ],
+            "qty": 1,
+            "default_qty": 1,
+            "rate": 10,
+            "variant_item_code": "Lin02",
+            "delivery_date": "2025-06-14",
+            "price_list_rate": 10,
+            "amount": 10,
+            "remarks": "",
+            "uom_id": "件",
+            "uom_name": "件",
+            "additional_notes": "1",
+            "size": "0"
+        },
+        {
+            "doctype": "Item",
+            "item_code": "Lin02-B-0",
+            "item_name": "Lin02 (B, 0)",
+            "description": "Lin02 (B, 0)",
+            "variant_of": "Lin02",
+            "item_group": "成品",
+            "uom": "件",
+            "stock_uom": "件",
+            "has_variants": 0,
+            "attributes": [
+                {
+                    "attribute_type": "color",
+                    "attribute": "B45",
+                    "attribute_value": "B"
+                },
+                {
+                    "attribute_type": "size",
+                    "attribute": "DL-00-20",
+                    "attribute_value": "0"
+                }
+            ],
+            "qty": 1,
+            "default_qty": 1,
+            "rate": 20,
+            "variant_item_code": "Lin02",
+            "delivery_date": "2025-06-14",
+            "price_list_rate": 20,
+            "amount": 20,
+            "remarks": "",
+            "uom_id": "件",
+            "uom_name": "件",
+            "additional_notes": "2",
+            "size": "0"
+        }
+    ],
+    "taxes": [],
+    "attachments": [],
+    "follower_id": "HR-EMP-00003",
+    "follower_name": "4@4.com",
+    "remarks": ""
+}

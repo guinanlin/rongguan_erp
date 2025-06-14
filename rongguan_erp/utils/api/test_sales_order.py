@@ -6,11 +6,12 @@ from pathlib import Path
 
 # bench run-tests --module rongguan_erp.utils.api.test_sales_order
 # 读取 JSON 文件
-test_data_path = Path(__file__).parent / "test_sales_order.json"
+test_data_path = Path(__file__).parent / "test_sales_order2.json"
 with open(test_data_path, "r", encoding="utf-8") as f:
     order_data = json.load(f)
 
 class TestSalesOrder(unittest.TestCase):
+    created_sales_orders = [] # 新增类变量用于存储创建的销售订单
     @classmethod
     def setUpClass(cls):
         """初始化 Frappe 环境（仅执行一次）"""
@@ -21,6 +22,10 @@ class TestSalesOrder(unittest.TestCase):
     def tearDownClass(cls):
         """清理 Frappe 环境（仅执行一次）"""
         if frappe.local.site:
+            for so_name in cls.created_sales_orders:
+                if frappe.db.exists("Sales Order", so_name):
+                    frappe.delete_doc("Sales Order", so_name, ignore_permissions=True)
+                    print(f"✅ 清理销售订单成功: {so_name}")
             frappe.destroy()
             frappe.init(site="site1.local")  # 重新初始化以避免缓存错误
 
@@ -48,19 +53,29 @@ class TestSalesOrder(unittest.TestCase):
         # 输出 result 的内容
         print("✅ 返回值 result:", result)
         # 从返回值的 "data" 字段中获取 name
-        self.assertTrue(frappe.db.exists("Sales Order", result["data"]["name"]))
-        print("✅ 销售订单创建成功:", result["data"]["name"])
+        created_so_name = result["data"]["name"]
+        self.assertTrue(frappe.db.exists("Sales Order", created_so_name))
+        print("✅ 销售订单创建成功:", created_so_name)
+        TestSalesOrder.created_sales_orders.append(created_so_name) # 记录创建的销售订单
 
     def test_get_sales_order_detail(self):
         """测试获取销售订单详情"""
+        # 在获取详情前先创建一个销售订单
+        self.order_data["name"] = self.generate_order_number()
+        create_result = save_sales_order(self.order_data)
+        self.assertTrue(create_result["data"]["success"])
+        created_so_name = create_result["data"]["name"]
+        TestSalesOrder.created_sales_orders.append(created_so_name) # 记录创建的销售订单
+
         # 调用 get_sales_order_detail 方法
         from rongguan_erp.utils.api.sales_order import get_sales_order_detail
-        detail_result = get_sales_order_detail("SO-25-0611-00001-00")
+        detail_result = get_sales_order_detail(created_so_name)
         
         # 验证返回结果
         self.assertTrue(detail_result["success"])
         self.assertEqual(detail_result["message"], "Success")
         self.assertIsNotNone(detail_result["data"])
+        self.assertEqual(detail_result["data"]["name"], created_so_name) # 验证获取的订单号
         print(f"✅ 销售订单详情获取成功: {detail_result['data']['name']}")
 
     # def test_invalid_input(self):

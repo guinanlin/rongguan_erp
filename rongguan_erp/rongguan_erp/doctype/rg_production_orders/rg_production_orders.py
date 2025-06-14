@@ -62,7 +62,12 @@ def saveRGProductionOrder(doc):
 		material_data = doc.get("materialData", {})
 		if material_data:
 			try:
-				bulk_add_items_from_data(material_data)
+				item_creation_result = bulk_add_items_from_data(material_data) # 捕获返回值
+				if item_creation_result and item_creation_result.get("errors"):
+					# 如果存在错误，打印并抛出
+					error_message = "导入成品物料时出错: " + str(item_creation_result["errors"])
+					frappe.log_error(error_message)
+					frappe.throw(error_message)
 			except Exception as e:
 				frappe.log_error(f"导入成品物料时出错: {str(e)}")
 				# 不影响后续执行，继续处理
@@ -127,7 +132,7 @@ def saveRGProductionOrder(doc):
 			# 处理 sizes 字段，只添加数量不为 0 的尺码
 			for size, qty in sizes.items():
 				if qty and int(qty) != 0:
-					item_code_def = f"FG-{code}-{color}-{size}"
+					item_code_def = code # 映射物料代码，直接使用 code 字段值
 					items_list.append({
 						"item_code": item_code_def, # 映射物料代码
 						"color": color, # 映射颜色
@@ -227,7 +232,7 @@ def bulk_add_items_from_data(item_data):
 		item_data = json.loads(item_data)
 	
 	# 如果输入是字典且包含 materialList 字段，则提取该字段
-	print(f"item_data:============== {item_data}")
+	print(f"item_data:==============\n {item_data}\n===============")
 	if isinstance(item_data, dict) and "materialList" in item_data:
 		items = item_data.get("materialList", [])
 		item_group = item_data.get("itemGroup", "成品")
@@ -246,17 +251,18 @@ def bulk_add_items_from_data(item_data):
 		color = item.get("color")
 		unit = item.get("unit")
 		sizes = item.get("sizes", {})
-		
+		variant_of = item.get("variant_of")
 		# 处理 sizes 字段，只添加数量不为 0 的尺码
 		for size, qty in sizes.items():
 			if qty and int(qty) != 0:
 				# 构建 Item 代码
-				item_code = f"{code}-{color}-{size}"
+				item_code = code # 直接使用 code 字段值
 				
 				# 检查 Item 是否已经存在
-				if frappe.db.exists("Item", item_code):
-					frappe.log_error(f"Item {item_code} 已存在，跳过导入。")
-					continue
+				# if frappe.db.exists("Item", item_code):
+				# 	frappe.log_error(f"Item {item_code} 已存在，跳过导入。")
+				# 	print(f"Item {item_code} 已存在，跳过导入。===========")
+				# 	continue
 				
 				# 创建新的 Item 变体，包含尺码信息
 				item_variant = {
@@ -265,21 +271,22 @@ def bulk_add_items_from_data(item_data):
 					"item_name": f"{code} ({color}, {size})",
 					"description": f"{code} with color {color} and size {size}",
 					"uom": unit,
-					"variant_of": code,  # 关联到已存在的变体 Item
-					"has_variants": 0,
+					"variant_of": variant_of,
+					"has_variants": 1,
 					"attributes": [
 						{"attribute": color_attribute, "attribute_value": color},
 						{"attribute": size_attribute, "attribute_value": size}
 					],
 					"stock_uom": unit,
 					"default_qty": int(qty),
-					"item_group": item_group  # 使用从数据中获取的 item_group 或默认值
+					"item_group": item_group
 				}
-				print(f"item_variant: {item_variant}")
+				print(f"产生物料的变体 item_variant:\n {item_variant}\n===============")
 				items_to_create.append(item_variant)
 	
 	# 调用 bulk_create_items 接口进行批量创建
 	result = bulk_create_items(items_to_create)
+	print(f"批量创建物料的变体 result:\n {result}\n===============")
 	return result
 
 @frappe.whitelist()

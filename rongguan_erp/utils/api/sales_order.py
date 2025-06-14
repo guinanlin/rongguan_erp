@@ -70,7 +70,7 @@ def map_sales_order_to_production_order(so, items_data):
         "customerId": so.customer,      # 客户ID
         "orderNumber": so.name,         # 订单号（使用销售订单号）
         "orderDate": so.transaction_date,  # 订单日期
-        "deliveryDate": so.delivery_date,  # 交货日期
+        "deliveryDate": so.delivery_date,  # 交货日期        
         "quantity": so.total_qty,       # 总数量
         "productName": items_data[0].get("variant_of", "") if items_data else "",  # Use variant_of as product name from items_data
         "businessType": so.business_type,  # 业务类型
@@ -91,6 +91,7 @@ def map_sales_order_to_production_order(so, items_data):
 @frappe.whitelist(allow_guest=False)  # 确保只允许认证用户访问
 def save_sales_order(order_data=None, *args, **kwargs):
     try:
+        # 参数检查================================================
         # 处理多种参数传递方式
         if not order_data:
             if args and isinstance(args[0], (str, dict)):
@@ -146,6 +147,7 @@ def save_sales_order(order_data=None, *args, **kwargs):
              }
         # ===========================================
 
+        # 2. 字段转换================================================
 
         # 1. 批量创建商品（items）
         items = order_data.get("items", [])
@@ -323,6 +325,7 @@ def get_sales_order_detail(sales_order_number):
         styleItemRecord = frappe.get_doc("Item", variant_of)
         print(f"styleItemRecord:============== {styleItemRecord}")
         styleItem = { "item_name": styleItemRecord.item_name, "item_code": styleItemRecord.item_code }
+
         # 为每个物料获取属性
         items_with_attributes = []
         for item in sales_order.items:

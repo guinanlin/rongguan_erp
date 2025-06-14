@@ -26,20 +26,22 @@
         "washLabel": {"file_url": ""}
     },
     "materialData": {
-        "itemGroup": "Finished Goods",
+        "itemGroup": "成品",
         "selectedColorChart": {"name": "XSD专属定义颜色"},
         "selectedSizeChart": {"name": "荣冠尺码"},
         "materialList": [
             {
-                "code": "FG-25-054-大金-46#",
-                "color": "XSD专属定义颜色",
+                "code": "FG-25-054-001",
+                "color": "粉粉",
                 "unit": "件",
+                "variant_of": "25-054",
                 "sizes": {"46#": 10}
             },
             {
-                "code": "FG-25-054-大金-48#",
-                "color": "XSD专属定义颜色",
+                "code": "FG-25-054-002",
+                "color": "大金",
                 "unit": "件",
+                "variant_of": "25-054",
                 "sizes": {"48#": 30}
             }
         ]

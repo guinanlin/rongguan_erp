@@ -53,5 +53,5 @@ class TestRGProductionOrders(FrappeTestCase):
 	# def test_save_without_items(self):
 	#     pass
 
-if __name__ == "__main__":
-	unittest.main()
+# if __name__ == "__main__":
+# 	unittest.main()
