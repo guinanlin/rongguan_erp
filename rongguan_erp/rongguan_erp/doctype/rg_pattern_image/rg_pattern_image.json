@@ -1,0 +1,26 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2025-05-17 01:51:51.573699",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "image"
+ ],
+ "fields": [
+  {
+   "fieldname": "image",
+   "fieldtype": "Attach Image",
+   "label": "款式图"
+  }
+ ],
+ "istable": 1,
+ "modified": "2025-05-17 01:59:59.184042",
+ "modified_by": "Administrator",
+ "module": "Rongguan Erp",
+ "name": "RG Pattern Image",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+} 

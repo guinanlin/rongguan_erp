@@ -1,0 +1,140 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:RGPP-{#####}",
+ "creation": "2025-06-20 11:31:03.658949",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_images",
+  "style_no",
+  "style_name",
+  "style_code",
+  "customer",
+  "material_usages",
+  "fabric_images",
+  "lining_images",
+  "column_break_ntnj",
+  "fabric_info",
+  "lining_info",
+  "process_instructions",
+  "remarks",
+  "amended_from"
+ ],
+ "fields": [
+  {
+   "fieldname": "fabric_info",
+   "fieldtype": "Text",
+   "label": "\u9762\u6599\u4fe1\u606f\u53ca\u7f29\u7387"
+  },
+  {
+   "fieldname": "lining_info",
+   "fieldtype": "Text",
+   "label": "\u91cc\u6599\u4fe1\u606f\u53ca\u7f29\u7387"
+  },
+  {
+   "fieldname": "process_instructions",
+   "fieldtype": "Text",
+   "label": "\u751f\u4ea7\u6ce8\u610f\u4e8b\u9879"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Text",
+   "label": "\u5907\u6ce8"
+  },
+  {
+   "fieldname": "material_usages",
+   "fieldtype": "Table",
+   "label": "\u9762\u91cc\u6599\u7528\u91cf",
+   "options": "RG Paper Material Usage"
+  },
+  {
+   "fieldname": "section_break_images",
+   "fieldtype": "Section Break",
+   "label": "\u7eb8\u6837"
+  },
+  {
+   "fieldname": "fabric_images",
+   "fieldtype": "Attach",
+   "label": "\u9762\u6599\u56fe\u7247"
+  },
+  {
+   "fieldname": "lining_images",
+   "fieldtype": "Attach",
+   "label": "\u91cc\u6599\u56fe\u7247"
+  },
+  {
+   "fieldname": "style_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u6b3e\u5f0f\u7f16\u53f7",
+   "reqd": 1
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u5ba2\u6237",
+   "options": "Customer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "style_name",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u6b3e\u53f7",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "style_no",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u6b3e\u5f0f",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_ntnj",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "amended_from",
+   "fieldtype": "Link",
+   "label": "Amended From",
+   "no_copy": 1,
+   "options": "RG Paper Pattern",
+   "print_hide": 1,
+   "read_only": 1,
+   "search_index": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "is_submittable": 1,
+ "links": [],
+ "modified": "2025-06-20 12:13:20.249548",
+ "modified_by": "Administrator",
+ "module": "Rongguan Erp",
+ "name": "RG Paper Pattern",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "submit": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

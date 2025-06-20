@@ -1,0 +1,26 @@
+{
+ "actions": [],
+ "allow_rename": 0,
+ "creation": "2025-05-17 01:51:51.573699",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "worker_name"
+ ],
+ "fields": [
+  {
+   "fieldname": "worker_name",
+   "fieldtype": "Data",
+   "label": "样衣工姓名"
+  }
+ ],
+ "istable": 1,
+ "modified": "2025-05-17 01:59:59.184042",
+ "modified_by": "Administrator",
+ "module": "Rongguan Erp",
+ "name": "RG Sample Worker",
+ "owner": "Administrator",
+ "permissions": [],
+ "sort_field": "modified",
+ "sort_order": "DESC"
+} 
