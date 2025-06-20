@@ -4,6 +4,7 @@ import frappe
 from frappe import _
 import json
 import time
+import frappe.utils # Import frappe.utils for date/time functions
 from rongguan_erp.rongguan_erp.doctype.rg_production_orders.rg_production_orders import saveRGProductionOrder
 from rongguan_erp.rongguan_erp.doctype.rg_production_orders.rg_production_orders_model import get_default_production_order_data
 
@@ -224,16 +225,75 @@ def save_sales_order(order_data=None, *args, **kwargs):
                 frappe.db.rollback()
                 frappe.throw(_("销售订单和生产制造工单未能全部创建成功: {0}").format(str(e)))
 
-            # 只有当销售订单和生产制造工单都成功创建后，才提交事务
+            # 初始化 rg_pattern_name 和 rg_pattern_message
+            rg_pattern_name = None
+            rg_pattern_message = _("")
+
+            # 当order_data.contract_type 为 Sample 创建 RG Pattern 文档
+            if order_data.get("contract_type") == "sample":
+                # rg_pattern_name = None # 移除此行，因为已在上方初始化
+                # rg_pattern_message = _("RG Pattern 文档创建成功") # 移除此行，将在成功时设置
+                try:
+                    # 获取第一个物料的 variant_of 作为 style_no 和 style_name 的来源
+                    first_item = so.items[0] if so.items else None
+                    if not first_item or not first_item.variant_of:
+                        frappe.throw(_("对于 'Sample' 合同类型，销售订单必须包含至少一个具有 'variant_of' 的物料。"))
+
+                    style_item_doc = frappe.get_doc("Item", first_item.variant_of)
+                    
+                    sample_garment_form_data = order_data.get("sample_garment_form", {})
+
+                    # 如果 sample_garment_form 数据缺失，抛出异常
+                    if not sample_garment_form_data:
+                        frappe.throw(_("对于 'Sample' 合同类型，'sample_garment_form' 数据不能为空。"))
+
+                    pattern_data = {
+                        "style_no": style_item_doc.item_code, # 使用 variant_of 物料的 item_code
+                        "style_name": style_item_doc.item_code, # 使用 variant_of 物料的 item_name
+                        "customer_name": so.customer,
+                        "pattern_name": f"{so.name}-RG-PATTERN", # 结合销售订单号生成唯一名称
+                        "sample_start_time": frappe.utils.now_datetime(),
+                        "sample_end_time": frappe.utils.now_datetime(),
+                        "handwork_machine_cost": 0,
+                        "special_process_cost": 0,
+                        "sample_workers": None,
+                        "version": sample_garment_form_data.get("version", "V1.0"), # 从 sample_garment_form 获取
+                        "season": sample_garment_form_data.get("season", ""), # 从 sample_garment_form 获取
+                        "sample_type": sample_garment_form_data.get("sampleType", "销售样"), # 从 sample_garment_form 获取
+                        "category": sample_garment_form_data.get("category", ""), # 从 sample_garment_form 获取
+                        "sample_grade": sample_garment_form_data.get("sampleGrade", "A级"), # 从 sample_garment_form 获取
+                        "year": sample_garment_form_data.get("year", str(frappe.utils.now_datetime().year)), # 从 sample_garment_form 获取，并确保为字符串
+                        "status": "草稿",
+                        "doctype": "RG Pattern"
+                    }
+
+                    print(f"pattern_data:============== {pattern_data}")
+                    
+                    rg_pattern_result = save_to_rg_pattern(pattern_data)
+
+                    if rg_pattern_result.get("error"):
+                        rg_pattern_message = _("销售订单和生产制造工单创建成功，但 RG Pattern 文档创建失败: {0}").format(rg_pattern_result["error"])
+                        frappe.db.rollback()
+                        frappe.throw(_("销售订单、生产制造工单和 RG Pattern 文档未能全部创建成功: {0}").format(rg_pattern_result["error"]))
+                    else:
+                        rg_pattern_name = rg_pattern_result["data"]["name"]
+
+                except Exception as e:
+                    rg_pattern_message = _("销售订单和生产制造工单创建成功，但在尝试创建 RG Pattern 文档时发生未知错误: {0}").format(str(e))
+                    frappe.db.rollback()
+                    frappe.throw(_("销售订单、生产制造工单和 RG Pattern 文档未能全部创建成功: {0}").format(str(e)))
+            
+            # 只有当销售订单、生产制造工单和 RG Pattern 文档（如果适用）都成功创建后，才提交事务
             frappe.db.commit()
 
             return {
                 "data": {
                     "name": so.name,
                     "production_order_name": production_order_name,
+                    "rg_pattern_name": rg_pattern_name, # 添加 RG Pattern 文档名称
                     "status": "Success",
                     "success": True,
-                    "message": production_order_message
+                    "message": production_order_message if not rg_pattern_name else rg_pattern_message
                 }
             }
         except Exception as e:
@@ -292,6 +352,43 @@ def save_to_rg_production_orders(production_order_data):
         return {
             "error": _("Failed to save RG Production Order: {0}").format(str(e))
         }
+
+@frappe.whitelist(allow_guest=False)
+def save_to_rg_pattern(pattern_data):
+    """
+    保存数据到 RG Pattern 文档
+
+    参数:
+        pattern_data (dict): 包含 RG Pattern 数据的字典
+
+    返回:
+        dict: 保存结果
+    """
+    try:
+        # 确保 doctype 正确
+        pattern_data["doctype"] = "RG Pattern"
+
+        # 创建新的 RG Pattern 文档
+        doc = frappe.get_doc(pattern_data)
+
+        # 插入文档
+        doc.insert(ignore_permissions=True)
+        frappe.db.commit()
+
+        return {
+            "data": {
+                "name": doc.name,
+                "status": "Success",
+                "success": True,
+                "message": _("RG Pattern created successfully")
+            }
+        }
+    except Exception as e:
+        frappe.db.rollback()
+        return {
+            "error": _("Failed to save RG Pattern: {0}").format(str(e))
+        }
+
 # bench execute rongguan_erp.utils.api.sales_order.get_sales_order_detail --args '{"name": "SO-25-0611-00001-00"}'
 @frappe.whitelist(allow_guest=False)
 def get_sales_order_detail(sales_order_number):

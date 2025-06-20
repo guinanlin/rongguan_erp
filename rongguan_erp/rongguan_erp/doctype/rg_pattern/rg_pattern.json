@@ -1,19 +1,34 @@
 {
  "actions": [],
  "allow_rename": 1,
- "creation": "2025-05-17 01:51:51.573699",
+ "autoname": "SM-.####",
+ "creation": "2025-06-18 04:36:44.744367",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
   "section_break_mimf",
-  "pattern_no",
-  "style_image",
-  "style_name",
-  "version_no",
-  "size_range",
-  "creation_date",
-  "created_by",
+  "style_no",
+  "customer_name",
+  "sample_start_time",
+  "handwork_machine_cost",
+  "version",
+  "sample_type",
+  "year",
   "status",
+  "column_break_pojr",
+  "style_name",
+  "pattern_name",
+  "sample_end_time",
+  "special_process_cost",
+  "season",
+  "sample_grade",
+  "category",
+  "section_break_ihnw",
+  "images",
+  "remarks",
+  "column_break_youo",
+  "files",
+  "sample_workers",
   "amended_from"
  ],
  "fields": [
@@ -22,15 +37,11 @@
    "fieldtype": "Section Break"
   },
   {
-   "fieldname": "pattern_no",
-   "fieldtype": "Data",
-   "label": "\u7eb8\u6837\u7f16\u53f7",
+   "fieldname": "style_no",
+   "fieldtype": "Link",
+   "label": "\u6b3e\u53f7",
+   "options": "Item",
    "unique": 1
-  },
-  {
-   "fieldname": "style_image",
-   "fieldtype": "Attach Image",
-   "label": "\u6b3e\u5f0f\u56fe\u7247"
   },
   {
    "fieldname": "style_name",
@@ -39,30 +50,111 @@
    "options": "Item"
   },
   {
-   "fieldname": "version_no",
-   "fieldtype": "Data",
-   "label": "\u7248\u672c\u53f7"
+   "fieldname": "customer_name",
+   "fieldtype": "Link",
+   "label": "\u5ba2\u6237\u540d\u79f0",
+   "options": "Customer"
   },
   {
-   "fieldname": "size_range",
+   "fieldname": "pattern_name",
    "fieldtype": "Data",
-   "label": "\u5c3a\u7801\u8303\u56f4"
+   "label": "\u7248\u578b\u540d\u79f0"
   },
   {
-   "fieldname": "creation_date",
-   "fieldtype": "Date",
-   "label": "\u521b\u5efa\u65f6\u95f4"
+   "fieldname": "sample_start_time",
+   "fieldtype": "Datetime",
+   "label": "\u6253\u6837\u5f00\u59cb\u65f6\u95f4"
   },
   {
-   "fieldname": "created_by",
-   "fieldtype": "Data",
-   "label": "\u521b\u5efa\u4eba"
+   "fieldname": "sample_end_time",
+   "fieldtype": "Datetime",
+   "label": "\u6253\u6837\u7ed3\u675f\u65f6\u95f4"
+  },
+  {
+   "fieldname": "handwork_machine_cost",
+   "fieldtype": "Currency",
+   "label": "\u624b\u5de5\u4e13\u673a\u8d39\u7528"
+  },
+  {
+   "fieldname": "special_process_cost",
+   "fieldtype": "Currency",
+   "label": "\u7279\u6b8a\u5de5\u827a\u8d39\u7528"
+  },
+  {
+   "fieldname": "sample_workers",
+   "fieldtype": "JSON",
+   "label": "\u6837\u8863\u5de5"
+  },
+  {
+   "fieldname": "version",
+   "fieldtype": "Select",
+   "label": "\u7248\u672c",
+   "options": "V1.0\nV1.1\nV1.2\nV2.0\nV2.1"
+  },
+  {
+   "fieldname": "season",
+   "fieldtype": "Select",
+   "label": "\u5b63\u8282",
+   "options": "\u6625\n\u590f\n\u79cb\n\u51ac"
+  },
+  {
+   "fieldname": "sample_type",
+   "fieldtype": "Select",
+   "label": "\u6837\u8863\u7c7b\u578b",
+   "options": "1\u70b9\u6837\n2\u70b9\u6837\n3\u70b9\u6837\nPP\u6837\n\u9500\u552e\u6837\n\u5e7f\u544a\u6837"
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Select",
+   "label": "\u7c7b\u522b",
+   "options": "\u5916\u5957\n\u88e4\u5b50\n\u88d9\u5b50\n\u914d\u9970"
+  },
+  {
+   "fieldname": "sample_grade",
+   "fieldtype": "Select",
+   "label": "\u6837\u8863\u7b49\u7ea7",
+   "options": "A\u7ea7\nB\u7ea7\nC\u7ea7"
+  },
+  {
+   "fieldname": "year",
+   "fieldtype": "Select",
+   "label": "\u5e74\u4efd",
+   "options": "2025\n2026\n2027"
   },
   {
    "fieldname": "status",
    "fieldtype": "Select",
    "label": "\u72b6\u6001",
-   "options": "\u8349\u7a3f\n\u5df2\u5ba1\u6838\n\u5df2\u53d1\u5e03\n\u5df2\u5f52\u6863"
+   "options": "\u8349\u7a3f\n\u5df2\u5ba1\u6838\n\u5df2\u53d1\u5e03"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Long Text",
+   "label": "\u5907\u6ce8"
+  },
+  {
+   "fieldname": "images",
+   "fieldtype": "Image",
+   "label": "\u6b3e\u5f0f\u56fe\u4e0a\u4f20",
+   "options": "RG Pattern Image"
+  },
+  {
+   "fieldname": "files",
+   "fieldtype": "Image",
+   "label": "\u7248\u672c\u56fe\u4e0a\u4f20",
+   "options": "RG Pattern File"
+  },
+  {
+   "fieldname": "column_break_pojr",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_ihnw",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "column_break_youo",
+   "fieldtype": "Column Break"
   },
   {
    "fieldname": "amended_from",
@@ -79,10 +171,11 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-05-17 01:59:59.184042",
+ "modified": "2025-06-19 14:47:23.770892",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "RG Pattern",
+ "naming_rule": "Expression (old style)",
  "owner": "Administrator",
  "permissions": [
   {
