@@ -251,6 +251,7 @@ def save_sales_order(order_data=None, *args, **kwargs):
                         "style_no": style_item_doc.item_code, # 使用 variant_of 物料的 item_code
                         "style_name": style_item_doc.item_code, # 使用 variant_of 物料的 item_name
                         "customer_name": so.customer,
+                        "sales_order": so.name,
                         "pattern_name": f"{so.name}-RG-PATTERN", # 结合销售订单号生成唯一名称
                         "sample_start_time": frappe.utils.now_datetime(),
                         "sample_end_time": frappe.utils.now_datetime(),

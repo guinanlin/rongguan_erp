@@ -23,6 +23,7 @@
   "season",
   "sample_grade",
   "category",
+  "sales_order",
   "section_break_ihnw",
   "images",
   "remarks",
@@ -134,15 +135,13 @@
   },
   {
    "fieldname": "images",
-   "fieldtype": "Image",
-   "label": "\u6b3e\u5f0f\u56fe\u4e0a\u4f20",
-   "options": "RG Pattern Image"
+   "fieldtype": "Attach Image",
+   "label": "\u6b3e\u5f0f\u56fe\u4e0a\u4f20"
   },
   {
    "fieldname": "files",
-   "fieldtype": "Image",
-   "label": "\u7248\u672c\u56fe\u4e0a\u4f20",
-   "options": "RG Pattern File"
+   "fieldtype": "Attach Image",
+   "label": "\u7248\u672c\u56fe\u4e0a\u4f20"
   },
   {
    "fieldname": "column_break_pojr",
@@ -165,13 +164,20 @@
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "sales_order",
+   "fieldtype": "Link",
+   "label": "Sales Order",
+   "options": "Sales Order"
   }
  ],
  "grid_page_length": 50,
+ "image_field": "images",
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-06-19 14:47:23.770892",
+ "modified": "2025-06-23 20:58:13.163094",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "RG Pattern",

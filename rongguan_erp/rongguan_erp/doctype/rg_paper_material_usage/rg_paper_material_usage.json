@@ -1,12 +1,11 @@
 {
  "actions": [],
- "allow_rename": 0,
- "creation": "2025-06-21 10:00:00.000000",
+ "creation": "2025-06-21 10:00:00",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
   "type",
-  "name",
+  "item_name",
   "amount",
   "unit",
   "remarks"
@@ -16,47 +15,47 @@
    "fieldname": "type",
    "fieldtype": "Select",
    "in_list_view": 1,
-   "label": "类型",
-   "options": "fabric\nlining"
-  },
-  {
-   "fieldname": "name",
-   "fieldtype": "Link",
-   "in_list_view": 1,
-   "label": "材料名称",
-   "options": "Item",
-   "reqd": 1
+   "label": "\u7c7b\u578b",
+   "options": "\u9762\u6599\n\u8f85\u6599"
   },
   {
    "fieldname": "amount",
    "fieldtype": "Float",
    "in_list_view": 1,
-   "label": "用量",
+   "label": "\u7528\u91cf",
    "reqd": 1
   },
   {
    "fieldname": "unit",
-   "fieldtype": "Select",
+   "fieldtype": "Link",
    "in_list_view": 1,
-   "label": "单位",
-   "options": "meter\nyard"
+   "label": "\u5355\u4f4d",
+   "options": "UOM"
   },
   {
    "fieldname": "remarks",
    "fieldtype": "Small Text",
-   "label": "备注"
+   "label": "\u5907\u6ce8"
+  },
+  {
+   "fieldname": "item_name",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u7269\u6599\u540d\u79f0",
+   "options": "Item",
+   "reqd": 1
   }
  ],
- "index_web_pages_for_search": 0,
  "istable": 1,
  "links": [],
- "modified": "2025-06-21 10:00:00.000000",
+ "modified": "2025-06-24 04:34:22.041957",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "RG Paper Material Usage",
  "owner": "Administrator",
  "permissions": [],
+ "row_format": "Dynamic",
  "sort_field": "modified",
  "sort_order": "DESC",
  "states": []
-} 
+}
