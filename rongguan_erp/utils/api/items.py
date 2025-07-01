@@ -384,3 +384,540 @@ def get_item_size_values(item_code):
     return {
         "size_attributes": size_attributes
     }    
+
+@frappe.whitelist()
+def get_item_rate_info(item_code, company=None, rm_cost_as_per="Valuation Rate", buying_price_list=None, qty=1):
+    """
+    根据 item_code 获取该物料的 rate 信息（不依赖已存在的 BOM）
+    模拟 BOM Creator 中选择物料时自动计算 rate 的逻辑
+    
+    Args:
+        item_code (str): 物料编码
+        company (str): 公司（可选，默认取默认公司）
+        rm_cost_as_per (str): 原材料成本来源，可选值：'Valuation Rate', 'Last Purchase Rate', 'Price List'
+        buying_price_list (str): 采购价格清单（可选）
+        qty (float): 数量（默认为1）
+        
+    Returns:
+        dict: 包含物料 rate 信息的字典
+    """
+    if not item_code:
+        return {"error": "item_code is required"}
+    
+    try:
+        # 检查物料是否存在
+        if not frappe.db.exists("Item", item_code):
+            return {"error": f"Item {item_code} does not exist"}
+        
+        # 获取物料基本信息
+        item_doc = frappe.get_doc("Item", item_code)
+        
+        # 如果没有指定公司，使用默认公司
+        if not company:
+            company = frappe.defaults.get_user_default("Company") or frappe.get_all("Company", limit=1)[0].name
+        
+        # 导入 get_bom_item_rate 函数
+        from erpnext.manufacturing.doctype.bom.bom import get_bom_item_rate
+        
+        # 准备参数，模拟 BOM Creator 的逻辑
+        args = {
+            "company": company,
+            "item_code": item_code,
+            "bom_no": "",
+            "qty": float(qty),
+            "uom": item_doc.stock_uom,
+            "stock_uom": item_doc.stock_uom,
+            "conversion_factor": 1.0,
+            "sourced_by_supplier": 0,
+        }
+        
+        # 创建一个模拟的 BOM Creator 对象来传递参数
+        mock_bom_creator = frappe._dict({
+            "company": company,
+            "rm_cost_as_per": rm_cost_as_per,
+            "buying_price_list": buying_price_list,
+            "currency": frappe.get_cached_value("Company", company, "default_currency"),
+            "conversion_rate": 1.0,
+            "plc_conversion_rate": 1.0,
+            "set_rate_based_on_warehouse": 0,
+        })
+        
+        # 调用 get_bom_item_rate 获取 rate
+        rate = get_bom_item_rate(args, mock_bom_creator)
+        
+        # 计算金额
+        amount = float(rate) * float(qty)
+        
+        result = {
+            "item_code": item_code,
+            "item_name": item_doc.item_name,
+            "stock_uom": item_doc.stock_uom,
+            "qty": float(qty),
+            "rate": rate,
+            "amount": amount,
+            "company": company,
+            "rm_cost_as_per": rm_cost_as_per,
+            "buying_price_list": buying_price_list,
+            "currency": mock_bom_creator.currency,
+            "rate_source": f"Calculated using {rm_cost_as_per}"
+        }
+        
+        return result
+        
+    except Exception as e:
+        frappe.log_error(f"Error in get_item_rate_info for {item_code}: {str(e)}", "Item Rate API Error")
+        return {"error": f"Failed to get item rate: {str(e)}"}
+
+
+@frappe.whitelist()
+def get_item_bom_items(item_code):
+    """
+    根据 item_code 获取该物料的默认 BOM 中的所有 BOM Items 和 rate 信息
+    
+    Args:
+        item_code (str): 物料编码
+        
+    Returns:
+        dict: 包含 BOM Items 信息的字典
+    """
+    if not item_code:
+        return {"error": "item_code is required"}
+    
+    try:
+        # 检查物料是否存在
+        if not frappe.db.exists("Item", item_code):
+            return {"error": f"Item {item_code} does not exist"}
+        
+        # 获取物料的默认 BOM
+        default_bom = frappe.get_value("Item", item_code, "default_bom")
+        
+        if not default_bom:
+            return {"error": f"No default BOM found for item {item_code}"}
+        
+        # 获取 BOM 基本信息
+        bom_doc = frappe.get_doc("BOM", default_bom)
+        
+        # 获取 BOM Items
+        bom_items = frappe.get_all(
+            "BOM Item",
+            filters={"parent": default_bom},
+            fields=[
+                "item_code",
+                "item_name", 
+                "qty",
+                "uom",
+                "rate",
+                "amount",
+                "stock_qty",
+                "stock_uom",
+                "conversion_factor",
+                "bom_no",
+                "sourced_by_supplier",
+                "allow_alternative_item",
+                "idx"
+            ],
+            order_by="idx"
+        )
+        
+        # 计算总成本
+        total_cost = sum(item.get("amount", 0) for item in bom_items)
+        
+        result = {
+            "item_code": item_code,
+            "bom_no": default_bom,
+            "bom_quantity": bom_doc.quantity,
+            "total_cost": total_cost,
+            "currency": bom_doc.currency,
+            "company": bom_doc.company,
+            "bom_items_count": len(bom_items),
+            "bom_items": bom_items
+        }
+        
+        return result
+        
+    except Exception as e:
+        frappe.log_error(f"Error in get_item_bom_items for {item_code}: {str(e)}", "BOM Items API Error")
+        return {"error": f"Failed to get BOM items: {str(e)}"}    
+
+@frappe.whitelist()
+def update_item_custom_bom_operation(item_code, custom_bom_operation):
+    """
+    更新指定物料的 custom_bom_operation 字段
+    
+    Args:
+        item_code (str): 物料编码
+        custom_bom_operation (list): BOM Operation 列表数据
+        
+    Returns:
+        dict: 更新结果
+    """
+    if not item_code:
+        return {"error": "item_code is required"}
+    
+    # 如果 custom_bom_operation 是字符串，尝试解析为 JSON
+    if isinstance(custom_bom_operation, str):
+        try:
+            custom_bom_operation = json.loads(custom_bom_operation)
+        except json.JSONDecodeError:
+            frappe.throw(_("Invalid JSON format for custom_bom_operation"))
+    
+    if not isinstance(custom_bom_operation, list):
+        frappe.throw(_("custom_bom_operation must be a list"))
+    
+    try:
+        # 检查物料是否存在
+        if not frappe.db.exists("Item", item_code):
+            return {"error": f"Item {item_code} does not exist"}
+        
+        # 首先检查并创建不存在的 Operation
+        created_operations = []
+        for operation_data in custom_bom_operation:
+            operation_name = operation_data.get("operation", "").strip()
+            if operation_name and not frappe.db.exists("Operation", operation_name):
+                try:
+                    # 创建新的 Operation
+                    operation_doc = frappe.get_doc({
+                        "doctype": "Operation",
+                        "operation": operation_name,
+                        "workstation": operation_data.get("workstation_type") or operation_data.get("workstation")
+                    })
+                    operation_doc.insert()
+                    created_operations.append(operation_name)
+                except Exception as e:
+                    frappe.log_error(f"Error creating Operation {operation_name}: {str(e)}", "Create Operation Error")
+                    # 继续处理，不因为创建 Operation 失败而中断整个流程
+        
+        # 获取物料文档
+        item_doc = frappe.get_doc("Item", item_code)
+        
+        # 清空现有的 custom_bom_operation
+        item_doc.custom_bom_operation = []
+        
+        # 添加新的 BOM Operation 记录
+        for idx, operation_data in enumerate(custom_bom_operation, 1):
+            # 创建 BOM Operation 子文档
+            bom_operation = frappe.new_doc("BOM Operation")
+            
+            # 设置基本字段
+            bom_operation.parent = item_code
+            bom_operation.parentfield = "custom_bom_operation"
+            bom_operation.parenttype = "Item"
+            bom_operation.idx = idx
+            
+            # 设置操作相关字段
+            bom_operation.operation = operation_data.get("operation", "")
+            bom_operation.workstation_type = operation_data.get("workstation_type")
+            bom_operation.workstation = operation_data.get("workstation")
+            bom_operation.time_in_mins = float(operation_data.get("time_in_mins", 0))
+            bom_operation.fixed_time = int(operation_data.get("fixed_time", 0))
+            bom_operation.hour_rate = float(operation_data.get("hour_rate", 0))
+            bom_operation.batch_size = int(operation_data.get("batch_size", 1))
+            bom_operation.set_cost_based_on_bom_qty = int(operation_data.get("set_cost_based_on_bom_qty", 0))
+            bom_operation.sequence_id = int(operation_data.get("sequence_id", 0))
+            bom_operation.description = operation_data.get("description")
+            bom_operation.image = operation_data.get("image")
+            
+            # 成本相关字段（通常由系统计算）
+            bom_operation.base_hour_rate = float(operation_data.get("base_hour_rate", 0))
+            bom_operation.operating_cost = float(operation_data.get("operating_cost", 0))
+            bom_operation.base_operating_cost = float(operation_data.get("base_operating_cost", 0))
+            bom_operation.cost_per_unit = float(operation_data.get("cost_per_unit", 0))
+            bom_operation.base_cost_per_unit = float(operation_data.get("base_cost_per_unit", 0))
+            
+            # 如果有现有的name字段且不是以"new-"开头的临时名称，保留它
+            if operation_data.get("name") and not operation_data.get("name", "").startswith("new-"):
+                bom_operation.name = operation_data.get("name")
+            
+            # 添加到 item_doc 的 custom_bom_operation 列表
+            item_doc.append("custom_bom_operation", bom_operation)
+        
+        # 保存文档
+        item_doc.save()
+        frappe.db.commit()
+        
+        # 返回更新后的数据
+        updated_item = frappe.get_doc("Item", item_code)
+        result = {
+            "success": True,
+            "message": f"Successfully updated custom_bom_operation for item {item_code}",
+            "item_code": item_code,
+            "custom_bom_operation_count": len(updated_item.custom_bom_operation),
+            "custom_bom_operation": [op.as_dict() for op in updated_item.custom_bom_operation]
+        }
+        
+        # 如果创建了新的 Operation，在结果中说明
+        if created_operations:
+            result["created_operations"] = created_operations
+            result["message"] += f". Created new operations: {', '.join(created_operations)}"
+        
+        return result
+        
+    except Exception as e:
+        frappe.db.rollback()
+        frappe.log_error(f"Error updating custom_bom_operation for {item_code}: {str(e)}", "Update Custom BOM Operation Error")
+        return {"error": f"Failed to update custom_bom_operation: {str(e)}"}
+
+@frappe.whitelist()
+def save_item_bom_structure(bom_data):
+    """
+    保存物料的 BOM 结构
+    
+    Args:
+        bom_data (dict/str): BOM 数据，包含 BOM 基本信息、BOM Items、BOM Operations 等
+        
+    Returns:
+        dict: 保存结果，包含创建的 BOM 名称和相关信息
+    """
+    print(f"=== 接收到的原始数据 ===")
+    print(f"bom_data 类型: {type(bom_data)}")
+    print(f"bom_data 内容: {bom_data}")
+    
+    if not bom_data:
+        return {"error": "bom_data is required"}
+    
+    # 如果 bom_data 是字符串，尝试解析为 JSON
+    if isinstance(bom_data, str):
+        try:
+            print(f"=== 解析JSON之前 ===")
+            print(f"原始字符串: {bom_data}")
+            bom_data = json.loads(bom_data)
+            print(f"=== 解析JSON之后 ===")
+            print(f"解析后的数据: {bom_data}")
+        except json.JSONDecodeError:
+            frappe.throw(_("Invalid JSON format for bom_data"))
+    
+    if not isinstance(bom_data, dict):
+        frappe.throw(_("bom_data must be a dictionary"))
+    
+    # 验证必要字段
+    if bom_data.get("doctype") != "BOM":
+        frappe.throw(_("Invalid doctype. Must be 'BOM'"))
+    
+    if not bom_data.get("item"):
+        frappe.throw(_("Item code is required"))
+    
+    try:
+        # 检查物料是否存在
+        item_code = bom_data.get("item")
+        if not frappe.db.exists("Item", item_code):
+            return {"error": f"Item {item_code} does not exist"}
+        
+        # 移除临时字段，避免保存时出错
+        temp_fields = ["__islocal", "__unsaved", "name"]
+        cleaned_bom_data = {k: v for k, v in bom_data.items() if k not in temp_fields}
+        
+        # 创建 BOM 文档
+        bom_doc = frappe.get_doc(cleaned_bom_data)
+        
+        # 清理 BOM Items 子表数据
+        if "items" in cleaned_bom_data and cleaned_bom_data["items"]:
+            bom_doc.items = []
+            for idx, item_data in enumerate(cleaned_bom_data["items"], 1):
+                # 移除临时字段
+                cleaned_item_data = {k: v for k, v in item_data.items() 
+                                   if k not in ["__islocal", "__unsaved", "name", "parent"]}
+                
+                # 设置必要字段
+                cleaned_item_data["idx"] = idx
+                cleaned_item_data["parentfield"] = "items"
+                cleaned_item_data["parenttype"] = "BOM"
+                
+                # 验证必要的物料字段
+                if not cleaned_item_data.get("item_code"):
+                    frappe.throw(_(f"Item code is required for BOM item at index {idx}"))
+                
+                # 检查 BOM Item 中的物料是否存在
+                if not frappe.db.exists("Item", cleaned_item_data["item_code"]):
+                    frappe.throw(_(f"Item {cleaned_item_data['item_code']} does not exist"))
+                
+                bom_doc.append("items", cleaned_item_data)
+        
+        # 清理 BOM Operations 子表数据
+        if "operations" in cleaned_bom_data and cleaned_bom_data["operations"]:
+            bom_doc.operations = []
+            for idx, operation_data in enumerate(cleaned_bom_data["operations"], 1):
+                # 移除临时字段
+                cleaned_operation_data = {k: v for k, v in operation_data.items() 
+                                        if k not in ["__islocal", "__unsaved", "name", "parent"]}
+                
+                # 设置必要字段
+                cleaned_operation_data["idx"] = idx
+                cleaned_operation_data["parentfield"] = "operations"
+                cleaned_operation_data["parenttype"] = "BOM"
+                
+                # 检查并创建不存在的 Operation
+                operation_name = cleaned_operation_data.get("operation", "").strip()
+                if operation_name and not frappe.db.exists("Operation", operation_name):
+                    try:
+                        operation_doc = frappe.get_doc({
+                            "doctype": "Operation",
+                            "operation": operation_name,
+                            "workstation": cleaned_operation_data.get("workstation")
+                        })
+                        operation_doc.insert()
+                    except Exception as e:
+                        frappe.log_error(f"Error creating Operation {operation_name}: {str(e)}", "Create Operation Error")
+                
+                bom_doc.append("operations", cleaned_operation_data)
+        
+        # 清理 Scrap Items 子表数据（如果有）
+        if "scrap_items" in cleaned_bom_data and cleaned_bom_data["scrap_items"]:
+            bom_doc.scrap_items = []
+            for idx, scrap_data in enumerate(cleaned_bom_data["scrap_items"], 1):
+                cleaned_scrap_data = {k: v for k, v in scrap_data.items() 
+                                    if k not in ["__islocal", "__unsaved", "name", "parent"]}
+                
+                cleaned_scrap_data["idx"] = idx
+                cleaned_scrap_data["parentfield"] = "scrap_items"
+                cleaned_scrap_data["parenttype"] = "BOM"
+                
+                bom_doc.append("scrap_items", cleaned_scrap_data)
+        
+        # 保存 BOM 文档
+        bom_doc.insert()
+        
+        # 自动提交 BOM 文档，使其从草稿状态变为已提交状态
+        bom_doc.submit()
+        
+        # 如果设置为默认 BOM，更新物料的 default_bom 字段
+        if bom_doc.is_default:
+            frappe.db.set_value("Item", item_code, "default_bom", bom_doc.name)
+        
+        frappe.db.commit()
+        
+        # 如果bom_data中包含销售订单号，则更新销售订单明细中的BOM编号
+        sales_order_no = bom_data.get("sales_order")
+        print(f"=== 调试信息 ===")
+        print(f"bom_data中的sales_order: {sales_order_no}")
+        print(f"物料编码: {item_code}")
+        print(f"BOM编号: {bom_doc.name}")
+        
+        if sales_order_no:
+            try:
+                print(f"开始调用update_sales_order_item_bom_no方法...")
+                
+                update_result = update_sales_order_item_bom_no(sales_order_no, item_code, bom_doc.name)
+                
+                print(f"更新结果: {update_result}")
+                
+                if not update_result.get("success"):
+                    print(f"更新失败: {update_result.get('error')}")
+                    frappe.log_error(f"更新销售订单BOM编号失败: {update_result.get('error')}", "Update Sales Order BOM Error")
+                else:
+                    print(f"更新成功: {update_result.get('message')}")
+            except Exception as e:
+                print(f"调用更新方法时出错: {str(e)}")
+                frappe.log_error(f"调用更新销售订单BOM编号方法时出错: {str(e)}", "Call Update Sales Order BOM Error")
+        else:
+            print(f"没有销售订单号，跳过更新")
+        
+        # 返回创建结果
+        result = {
+            "success": True,
+            "message": f"BOM created successfully for item {item_code}",
+            "bom_name": bom_doc.name,
+            "item_code": item_code,
+            "item_name": bom_doc.item_name,
+            "quantity": bom_doc.quantity,
+            "is_active": bom_doc.is_active,
+            "is_default": bom_doc.is_default,
+            "total_cost": bom_doc.total_cost,
+            "currency": bom_doc.currency,
+            "company": bom_doc.company,
+            "bom_items_count": len(bom_doc.items),
+            "bom_operations_count": len(bom_doc.operations) if bom_doc.operations else 0
+        }
+        
+        # 如果更新了销售订单，在返回结果中添加相关信息
+        if sales_order_no:
+            result["sales_order_updated"] = True
+            result["sales_order_no"] = sales_order_no
+            result["message"] += f" and updated Sales Order {sales_order_no}"
+        
+        return result
+        
+    except Exception as e:
+        frappe.db.rollback()
+        frappe.log_error(f"Error saving BOM for item {bom_data.get('item', 'Unknown')}: {str(e)}", "Save BOM Error")
+        return {"error": f"Failed to save BOM: {str(e)}"}
+
+def update_sales_order_item_bom_no(sales_order_no, item_code, bom_no):
+    """
+    更新销售订单明细中指定物料的BOM编号
+    
+    Args:
+        sales_order_no (str): 销售订单号
+        item_code (str): 销售订单项的物料编码
+        bom_no (str): 要更新的BOM编号
+        
+    Returns:
+        dict: 更新结果
+    """
+    print(f"=== update_sales_order_item_bom_no 开始 ===")
+    print(f"销售订单号: {sales_order_no}")
+    print(f"物料编码: {item_code}")
+    print(f"BOM编号: {bom_no}")
+    
+    if not sales_order_no:
+        return {"error": "销售订单号不能为空"}
+    
+    if not item_code:
+        return {"error": "物料编码不能为空"}
+    
+    if not bom_no:
+        return {"error": "BOM编号不能为空"}
+    
+    try:
+        # 检查销售订单是否存在
+        print(f"检查销售订单是否存在...")
+        if not frappe.db.exists("Sales Order", sales_order_no):
+            print(f"销售订单不存在")
+            return {"error": f"销售订单 {sales_order_no} 不存在"}
+        
+        # 检查BOM是否存在
+        print(f"检查BOM是否存在...")
+        if not frappe.db.exists("BOM", bom_no):
+            print(f"BOM不存在")
+            return {"error": f"BOM {bom_no} 不存在"}
+        
+        # 获取销售订单文档
+        print(f"获取销售订单文档...")
+        sales_order_doc = frappe.get_doc("Sales Order", sales_order_no)
+        print(f"销售订单项数量: {len(sales_order_doc.items)}")
+        
+        # 查找匹配的销售订单项
+        updated_item = None
+        for i, item in enumerate(sales_order_doc.items):
+            print(f"检查第{i+1}项: {item.item_code}")
+            if item.item_code == item_code:
+                print(f"找到匹配项，当前BOM编号: {item.bom_no}")
+                # 更新BOM编号
+                item.bom_no = bom_no
+                print(f"更新BOM编号为: {bom_no}")
+                updated_item = item
+                break
+        
+        if not updated_item:
+            print(f"未找到匹配的物料项")
+            return {"error": f"在销售订单 {sales_order_no} 中未找到物料 {item_code}"}
+        
+        # 保存销售订单
+        print(f"保存销售订单...")
+        sales_order_doc.save()
+        frappe.db.commit()
+        print(f"保存成功")
+        
+        return {
+            "success": True,
+            "message": f"成功更新销售订单 {sales_order_no} 中物料 {item_code} 的BOM编号为 {bom_no}",
+            "sales_order_no": sales_order_no,
+            "item_code": item_code,
+            "bom_no": bom_no,
+            "updated_item_name": updated_item.item_name
+        }
+        
+    except Exception as e:
+        frappe.db.rollback()
+        print(f"更新过程中出错: {str(e)}")
+        frappe.log_error(f"更新销售订单 {sales_order_no} 中物料 {item_code} 的BOM编号时出错: {str(e)}", "Update Sales Order Item BOM Error")
+        return {"error": f"更新失败: {str(e)}"}

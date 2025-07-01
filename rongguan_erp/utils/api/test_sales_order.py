@@ -78,6 +78,31 @@ class TestSalesOrder(unittest.TestCase):
         self.assertEqual(detail_result["data"]["name"], created_so_name) # 验证获取的订单号
         print(f"✅ 销售订单详情获取成功: {detail_result['data']['name']}")
 
+    def test_get_style_and_items_by_sales_order(self):
+        """测试通过销售订单号获取款式、款号及所有变体item"""
+        # 先创建一个销售订单
+        self.order_data["name"] = self.generate_order_number()
+        create_result = save_sales_order(self.order_data)
+        self.assertTrue(create_result["data"]["success"])
+        created_so_name = create_result["data"]["name"]
+        TestSalesOrder.created_sales_orders.append(created_so_name)
+
+        # 导入白名单方法
+        from rongguan_erp.utils.api.sales_order import get_style_and_items_by_sales_order
+        result = get_style_and_items_by_sales_order(created_so_name)
+        print("✅ get_style_and_items_by_sales_order 返回:", result)
+        # 断言返回结构
+        self.assertIn("custom_material_code_display", result)
+        self.assertIn("custom_style_number", result)
+        self.assertIn("items", result)
+        self.assertIsInstance(result["items"], list)
+
+    def test_print_specific_sales_order(self):
+        from rongguan_erp.utils.api.sales_order import get_style_and_items_by_sales_order
+        so_name = "SO-250629-48822-08"
+        result = get_style_and_items_by_sales_order(so_name)
+        print("指定销售订单号测试结果：", result)
+
     # def test_invalid_input(self):
     #     """测试无效输入"""
     #     with self.assertRaises(frappe.ValidationError):
@@ -106,4 +131,7 @@ class TestSalesOrder(unittest.TestCase):
     #     template.save()
 
 if __name__ == "__main__":
-    unittest.main()
+    from rongguan_erp.utils.api.sales_order import get_style_and_items_by_sales_order
+    so_name = "SO-250629-48822-08"
+    result = get_style_and_items_by_sales_order(so_name)
+    print("指定销售订单号测试结果：", result)

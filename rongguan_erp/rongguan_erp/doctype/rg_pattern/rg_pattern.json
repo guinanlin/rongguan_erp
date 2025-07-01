@@ -41,12 +41,12 @@
    "fieldname": "style_no",
    "fieldtype": "Link",
    "label": "\u6b3e\u53f7",
-   "options": "Item",
-   "unique": 1
+   "options": "Item"
   },
   {
+   "fetch_from": "style_no.item_name",
    "fieldname": "style_name",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "label": "\u6b3e\u5f0f\u540d\u79f0",
    "options": "Item"
   },
@@ -177,7 +177,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-06-23 20:58:13.163094",
+ "modified": "2025-07-01 01:03:23.941615",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "RG Pattern",

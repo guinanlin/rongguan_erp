@@ -249,7 +249,7 @@ def save_sales_order(order_data=None, *args, **kwargs):
 
                     pattern_data = {
                         "style_no": style_item_doc.item_code, # 使用 variant_of 物料的 item_code
-                        "style_name": style_item_doc.item_code, # 使用 variant_of 物料的 item_name
+                        # "style_name": style_item_doc.item_code, # 使用 variant_of 物料的 item_name
                         "customer_name": so.customer,
                         "sales_order": so.name,
                         "pattern_name": f"{so.name}-RG-PATTERN", # 结合销售订单号生成唯一名称
@@ -470,3 +470,60 @@ def get_sales_order_detail(sales_order_number):
 # Description: Steps to test sales order to production order mapping
 # 1. Ensure the sales order data includes valid items with attributes (color, size).
 # 2. Call `
+
+@frappe.whitelist()
+def get_style_and_items_by_sales_order(sales_order_name):
+    so = frappe.db.get_value("Sales Order", sales_order_name, ["custom_material_code_display", "custom_style_number"], as_dict=True)
+    if not so:
+        return {"error": "销售订单不存在"}
+    order_items = frappe.get_all(
+        "Sales Order Item",
+        filters={"parent": sales_order_name},
+        fields=["item_code", "uom", "qty", "bom_no"]
+    )
+    items = []
+    for oi in order_items:
+        item_doc = frappe.get_doc("Item", oi["item_code"])
+        # 获取属性（如颜色、尺码）
+        attributes = frappe.get_all(
+            "Item Variant Attribute",
+            filters={"parent": oi["item_code"]},
+            fields=["attribute", "attribute_value"]
+        )
+        color = ""
+        size = ""
+        for attr in attributes:
+            # 查 tabItem Attribute 的 _user_tags
+            user_tags = frappe.db.get_value("Item Attribute", attr["attribute"], "_user_tags") or ""
+            if "颜色" in user_tags:
+                color = attr["attribute_value"]
+            if "尺寸" in user_tags:
+                size = attr["attribute_value"]
+        # 获取价格
+        price = frappe.db.get_value("Item Price", {"item_code": oi["item_code"]}, "price_list_rate") or 0
+        # 获取库存
+        stock_qty = frappe.db.get_value("Bin", {"item_code": oi["item_code"]}, "projected_qty") or 0
+        # 组合自定义字段
+        items.append({
+            "item_code": item_doc.item_code,
+            "item_name": item_doc.item_name,
+            "description": item_doc.description,
+            "image_url": item_doc.image,
+            "unit": oi["uom"],
+            "bom_no": oi["bom_no"],
+            "stock_qty": stock_qty,
+            "location": getattr(item_doc, "location", ""),
+            "composition": getattr(item_doc, "composition", []),
+            "category": getattr(item_doc, "category", item_doc.item_group),
+            "size": size,
+            "color": color,
+            "price": price,
+            "custom_fields": {
+                "remark": getattr(item_doc, "remark", "")
+            }
+        })
+    return {
+        "custom_material_code_display": so.custom_material_code_display,
+        "custom_style_number": so.custom_style_number,
+        "items": items
+    }
