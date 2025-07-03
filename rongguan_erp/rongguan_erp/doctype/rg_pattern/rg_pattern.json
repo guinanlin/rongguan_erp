@@ -94,9 +94,8 @@
   },
   {
    "fieldname": "season",
-   "fieldtype": "Select",
-   "label": "\u5b63\u8282",
-   "options": "\u6625\n\u590f\n\u79cb\n\u51ac"
+   "fieldtype": "Data",
+   "label": "\u5b63\u8282"
   },
   {
    "fieldname": "sample_type",
@@ -177,7 +176,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-07-01 01:03:23.941615",
+ "modified": "2025-07-03 01:02:05.202551",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "RG Pattern",
