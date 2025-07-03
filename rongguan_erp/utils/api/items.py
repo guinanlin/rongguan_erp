@@ -386,7 +386,123 @@ def get_item_size_values(item_code):
     }    
 
 @frappe.whitelist()
-def get_item_rate_info(item_code, company=None, rm_cost_as_per="Valuation Rate", buying_price_list=None, qty=1):
+def get_item_available_stock(item_code, warehouse=None, company=None):
+    """
+    获取物料的可用库存信息
+    
+    Args:
+        item_code (str): 物料编码
+        warehouse (str): 仓库（可选，如果不指定则获取所有仓库的总库存）
+        company (str): 公司（可选，用于过滤仓库）
+        
+    Returns:
+        dict: 包含库存信息的字典
+    """
+    if not item_code:
+        return {"error": "item_code is required"}
+    
+    try:
+        # 检查物料是否存在
+        if not frappe.db.exists("Item", item_code):
+            return {"error": f"Item {item_code} does not exist"}
+        
+        # 检查物料是否为库存物料
+        item_doc = frappe.get_doc("Item", item_code)
+        if not item_doc.is_stock_item:
+            return {
+                "item_code": item_code,
+                "item_name": item_doc.item_name,
+                "is_stock_item": False,
+                "stock_uom": item_doc.stock_uom,
+                "message": "This is not a stock item"
+            }
+        
+        stock_info = {}
+        
+        if warehouse:
+            # 获取指定仓库的库存信息
+            bin_data = frappe.db.get_value(
+                "Bin",
+                {"item_code": item_code, "warehouse": warehouse},
+                ["actual_qty", "projected_qty", "reserved_qty", "ordered_qty", "planned_qty"],
+                as_dict=True
+            )
+            
+            if bin_data:
+                stock_info = {
+                    "warehouse": warehouse,
+                    "actual_qty": bin_data.actual_qty or 0,
+                    "projected_qty": bin_data.projected_qty or 0,
+                    "reserved_qty": bin_data.reserved_qty or 0,
+                    "ordered_qty": bin_data.ordered_qty or 0,
+                    "planned_qty": bin_data.planned_qty or 0
+                }
+            else:
+                stock_info = {
+                    "warehouse": warehouse,
+                    "actual_qty": 0,
+                    "projected_qty": 0,
+                    "reserved_qty": 0,
+                    "ordered_qty": 0,
+                    "planned_qty": 0
+                }
+        else:
+            # 获取所有仓库的总库存
+            if not company:
+                company = frappe.defaults.get_user_default("Company") or frappe.get_all("Company", limit=1)[0].name
+            
+            # 使用 SQL 查询获取汇总数据
+            bin_data = frappe.db.sql("""
+                SELECT 
+                    SUM(actual_qty) as actual_qty,
+                    SUM(projected_qty) as projected_qty,
+                    SUM(reserved_qty) as reserved_qty,
+                    SUM(ordered_qty) as ordered_qty,
+                    SUM(planned_qty) as planned_qty
+                FROM `tabBin` b
+                LEFT JOIN `tabWarehouse` w ON b.warehouse = w.name
+                WHERE b.item_code = %s
+                AND (w.company = %s OR %s IS NULL)
+            """, (item_code, company, company), as_dict=True)
+            
+            if bin_data and bin_data[0]:
+                data = bin_data[0]
+                stock_info = {
+                    "warehouse": "All Warehouses",
+                    "actual_qty": data.actual_qty or 0,
+                    "projected_qty": data.projected_qty or 0,
+                    "reserved_qty": data.reserved_qty or 0,
+                    "ordered_qty": data.ordered_qty or 0,
+                    "planned_qty": data.planned_qty or 0,
+                    "company": company
+                }
+            else:
+                stock_info = {
+                    "warehouse": "All Warehouses",
+                    "actual_qty": 0,
+                    "projected_qty": 0,
+                    "reserved_qty": 0,
+                    "ordered_qty": 0,
+                    "planned_qty": 0,
+                    "company": company
+                }
+        
+        result = {
+            "item_code": item_code,
+            "item_name": item_doc.item_name,
+            "is_stock_item": True,
+            "stock_uom": item_doc.stock_uom,
+            "stock_info": stock_info
+        }
+        
+        return result
+        
+    except Exception as e:
+        frappe.log_error(f"Error in get_item_available_stock for {item_code}: {str(e)}", "Item Stock API Error")
+        return {"error": f"Failed to get item stock: {str(e)}"}
+
+@frappe.whitelist()
+def get_item_rate_info(item_code, company=None, rm_cost_as_per="Valuation Rate", buying_price_list=None, qty=1, warehouse=None):
     """
     根据 item_code 获取该物料的 rate 信息（不依赖已存在的 BOM）
     模拟 BOM Creator 中选择物料时自动计算 rate 的逻辑
@@ -397,9 +513,10 @@ def get_item_rate_info(item_code, company=None, rm_cost_as_per="Valuation Rate",
         rm_cost_as_per (str): 原材料成本来源，可选值：'Valuation Rate', 'Last Purchase Rate', 'Price List'
         buying_price_list (str): 采购价格清单（可选）
         qty (float): 数量（默认为1）
+        warehouse (str): 仓库（可选，用于获取库存信息）
         
     Returns:
-        dict: 包含物料 rate 信息的字典
+        dict: 包含物料 rate 信息和库存信息的字典
     """
     if not item_code:
         return {"error": "item_code is required"}
@@ -448,6 +565,9 @@ def get_item_rate_info(item_code, company=None, rm_cost_as_per="Valuation Rate",
         # 计算金额
         amount = float(rate) * float(qty)
         
+        # 获取库存信息
+        stock_info = get_item_available_stock(item_code, warehouse, company)
+        
         result = {
             "item_code": item_code,
             "item_name": item_doc.item_name,
@@ -459,7 +579,9 @@ def get_item_rate_info(item_code, company=None, rm_cost_as_per="Valuation Rate",
             "rm_cost_as_per": rm_cost_as_per,
             "buying_price_list": buying_price_list,
             "currency": mock_bom_creator.currency,
-            "rate_source": f"Calculated using {rm_cost_as_per}"
+            "rate_source": f"Calculated using {rm_cost_as_per}",
+            "stock_info": stock_info.get("stock_info") if stock_info.get("stock_info") else None,
+            "is_stock_item": stock_info.get("is_stock_item", False)
         }
         
         return result
