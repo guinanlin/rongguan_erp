@@ -194,7 +194,8 @@ def get_items_with_attributes_with_pagination(filters=None, fields=None, page_nu
         fields=fields or ["*"],
         limit_page_length=page_size,
         limit_start=offset,
-        pluck='name'
+        pluck='name',
+        order_by="creation desc"
     )
 
     result_data = []
