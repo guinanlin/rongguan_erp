@@ -2,7 +2,7 @@
  "actions": [],
  "allow_rename": 1,
  "autoname": "format:POM-{#####}",
- "creation": "2025-06-06 17:00:01.274548",
+ "creation": "2025-07-01 01:23:47.143430",
  "doctype": "DocType",
  "engine": "InnoDB",
  "field_order": [
@@ -28,17 +28,16 @@
   "merchandiser",
   "column_break_ldcu",
   "salesperson",
-  "paper_pattern_maker_id",
   "section_break_apva",
   "column_break_5",
   "pattern_number",
   "national_order",
-  "mark",
   "column_break_6",
   "factory",
+  "image",
   "production_item_tab",
   "item_info_section",
-  "item",
+  "\u6b3e\u5f0f",
   "company",
   "cb0",
   "project",
@@ -114,14 +113,14 @@
   },
   {
    "fieldname": "style_number",
-   "fieldtype": "Link",
+   "fieldtype": "Data",
    "label": "\u6b3e\u53f7",
    "options": "Item"
   },
   {
    "fieldname": "product_name",
    "fieldtype": "Data",
-   "label": "\u4ea7\u54c1\u540d\u79f0"
+   "label": "\u6b3e\u5f0f"
   },
   {
    "fieldname": "column_break_5",
@@ -202,12 +201,6 @@
    "fieldname": "production_item_tab",
    "fieldtype": "Tab Break",
    "label": "\u751f\u4ea7\u6e05\u5355"
-  },
-  {
-   "fieldname": "item",
-   "fieldtype": "Link",
-   "label": "\u6b3e\u5f0f",
-   "options": "Item"
   },
   {
    "fieldname": "company",
@@ -391,15 +384,14 @@
    "label": "\u4ea7\u5730\u6807/\u5c3a\u7801\u6807"
   },
   {
-   "fieldname": "mark",
-   "fieldtype": "Data",
-   "label": "\u5907\u6ce8"
+   "fieldname": "image",
+   "fieldtype": "Attach",
+   "label": "\u56fe\u7247"
   },
   {
-   "fieldname": "paper_pattern_maker_id",
-   "fieldtype": "Link",
-   "label": "\u7eb8\u6837\u5458ID",
-   "options": "Employee"
+   "fieldname": "\u6b3e\u5f0f",
+   "fieldtype": "Data",
+   "label": "\u6b3e\u5f0f"
   },
   {
    "fieldname": "amended_from",
@@ -416,7 +408,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-06-06 17:00:39.311773",
+ "modified": "2025-07-08 21:24:09.589559",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "RG Production Orders",

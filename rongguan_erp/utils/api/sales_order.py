@@ -73,7 +73,8 @@ def map_sales_order_to_production_order(so, items_data):
         "orderDate": so.transaction_date,  # 订单日期
         "deliveryDate": so.delivery_date,  # 交货日期        
         "quantity": so.total_qty,       # 总数量
-        "productName": items_data[0].get("variant_of", "") if items_data else "",  # Use variant_of as product name from items_data
+        "styleNumber": so.custom_style_number,  #items_data[0].get("variant_of", "") if items_data else "",  # Use variant_of as product name from items_data
+        "productName": so.custom_material_code_display,  #items_data[0].get("variant_of", "") if items_data else "",  # Use variant_of as product name from items_data
         "businessType": so.business_type,  # 业务类型
         "orderStatus": "待处理",  # 初始状态
         "orderType": production_order_type,  # 订单类型，映射后的值
@@ -249,7 +250,7 @@ def save_sales_order(order_data=None, *args, **kwargs):
 
                     pattern_data = {
                         "style_no": style_item_doc.item_code, # 使用 variant_of 物料的 item_code
-                        # "style_name": style_item_doc.item_code, # 使用 variant_of 物料的 item_name
+                        # "style_name": order_data.get("custom_material_code_display", ""), # 使用 variant_of 物料的 item_name
                         "customer_name": so.customer,
                         "sales_order": so.name,
                         "pattern_name": f"{so.name}-RG-PATTERN", # 结合销售订单号生成唯一名称

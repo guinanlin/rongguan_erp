@@ -93,7 +93,7 @@ def saveRGProductionOrder(doc):
 			"pattern_number": doc.get("patternNumber"), # 映射纸样号
 			"national_order": doc.get("countryCode"), # 映射国家单 (根据字段名猜测)
 			"factory": doc.get("factoryId"), # 映射工厂ID
-			"style_number": doc.get("productName"), # 映射物料ID
+			"style_number": doc.get("styleNumber"), # 映射物料ID
 			"item": doc.get("productName"), # 映射物料ID
 			# "image": doc.get("image"), # JSON中未找到对应字段，忽略或需确认
 			"quantity": doc.get("quantity"), # 映射数量
@@ -457,6 +457,70 @@ def get_production_order_details(docname):
         
         # 将文档转换为字典格式，以便返回
         doc_dict = doc.as_dict()
+        
+        # 处理 items 子表，添加颜色和尺码信息
+        if "items" in doc_dict and doc_dict["items"]:
+            for item in doc_dict["items"]:
+                item_code = item.get("item_code")
+                if item_code:
+                    try:
+                        item_doc = frappe.get_doc("Item", item_code)
+                        color = ""
+                        size = ""
+                        
+                        # 获取 Item 的属性
+                        for attr in item_doc.get("attributes", []):
+                            attribute_name = attr.attribute
+                            attribute_value = attr.attribute_value
+                            
+                            # 查询 tabItem Attribute 表，根据 _user_tags 判断属性类型
+                            try:
+                                attr_doc = frappe.get_doc("Item Attribute", attribute_name)
+                                user_tags = attr_doc.get("_user_tags", "")
+                                
+                                # 如果 _user_tags 包含颜色相关关键词，则认为是颜色属性
+                                if any(tag in user_tags.lower() for tag in ["颜色"]):
+                                    color = attribute_value
+                                # 如果 _user_tags 包含尺寸相关关键词，则认为是尺码属性
+                                elif any(tag in user_tags.lower() for tag in ["尺寸"]):
+                                    size = attribute_value
+                                    
+                            except Exception as attr_e:
+                                frappe.log_error(f"获取属性 {attribute_name} 的 _user_tags 时出错: {str(attr_e)}")
+                                # 如果无法获取 _user_tags，不设置任何默认值，保持空值
+                        
+                        item["color"] = color # 添加颜色到返回的 item 字典
+                        item["size"] = size   # 添加尺码到返回的 item 字典
+                    except Exception as e:
+                        frappe.log_error(f"获取物料 {item_code} 的属性时出错: {str(e)}")
+                        # 即使无法获取物料属性，也继续执行
+        
+        # 根据 items 汇总 rg_size_details
+        size_qty_map = {}
+        if "items" in doc_dict and doc_dict["items"]:
+            for item in doc_dict["items"]:
+                size = item.get("size")
+                qty = item.get("qty")
+                if size and qty is not None:
+                    try:
+                        qty_int = int(qty)
+                        if size in size_qty_map:
+                            size_qty_map[size] += qty_int
+                        else:
+                            size_qty_map[size] = qty_int
+                    except ValueError:
+                        frappe.log_error(f"物料 {item.get('item_code')} 的数量格式无效: {qty}")
+        
+        derived_rg_size_details = []
+        idx = 1
+        for size, aggregated_qty in size_qty_map.items():
+            derived_rg_size_details.append({
+                "size": size,
+                "qty": aggregated_qty
+            })
+            idx += 1
+        
+        doc_dict["rg_size_details"] = derived_rg_size_details
         
         return doc_dict
     except Exception as e:
