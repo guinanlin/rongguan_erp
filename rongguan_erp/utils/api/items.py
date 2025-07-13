@@ -964,6 +964,148 @@ def save_item_bom_structure(bom_data):
         frappe.log_error(f"Error saving BOM for item {bom_data.get('item', 'Unknown')}: {str(e)}", "Save BOM Error")
         return {"error": f"Failed to save BOM: {str(e)}"}
 
+@frappe.whitelist()
+def bulk_save_item_boms(boms_data):
+    """
+    批量保存物料的 BOM 结构，并支持事务。
+
+    Args:
+        boms_data (list/str): 包含多个 BOM 数据的列表或 JSON 字符串。
+                               每个 BOM 数据应是 save_item_bom_structure 函数期望的字典格式。
+
+    Returns:
+        dict: 批量保存的结果，包含成功和失败的 BOM 列表及总体状态。
+    """
+    if not boms_data:
+        return {"error": "boms_data is required and cannot be empty"}
+
+    # 如果 boms_data 是字符串，尝试解析为 JSON
+    if isinstance(boms_data, str):
+        try:
+            boms_data = json.loads(boms_data)
+        except json.JSONDecodeError:
+            frappe.throw(_("Invalid JSON format for boms_data"))
+
+    if not isinstance(boms_data, list):
+        frappe.throw(_("boms_data must be a list of BOM dictionaries"))
+
+    successful_boms = []
+    failed_boms = []
+    
+    frappe.db.begin() # 开始数据库事务
+
+    try:
+        for idx, bom_data in enumerate(boms_data):
+            try:
+                # 调用现有的 save_item_bom_structure 来处理单个 BOM
+                # 注意：这里我们调用的是内部逻辑，而不是 whitelisted 的接口本身，
+                # 因为整个事务由 bulk_save_item_boms 统一管理。
+                # 为此，我们需要确保 save_item_bom_structure 的核心逻辑可以被复用。
+                # 为了简化，这里直接将 save_item_bom_structure 的核心逻辑复制过来，
+                # 或者可以重构 save_item_bom_structure 使其返回更详细的结果，并在外部捕获异常。
+                
+                # --- save_item_bom_structure 的核心逻辑复制开始 ---
+                if bom_data.get("doctype") != "BOM":
+                    raise frappe.ValidationError(_("Invalid doctype. Must be 'BOM' for BOM at index {0}").format(idx))
+                
+                item_code = bom_data.get("item")
+                if not item_code:
+                    raise frappe.ValidationError(_("Item code is required for BOM at index {0}").format(idx))
+                
+                if not frappe.db.exists("Item", item_code):
+                    raise frappe.DoesNotExistError(f"Item {item_code} does not exist for BOM at index {idx}")
+
+                temp_fields = ["__islocal", "__unsaved", "name"]
+                cleaned_bom_data = {k: v for k, v in bom_data.items() if k not in temp_fields}
+                
+                bom_doc = frappe.get_doc(cleaned_bom_data)
+                
+                if "items" in cleaned_bom_data and cleaned_bom_data["items"]:
+                    bom_doc.items = []
+                    for item_idx, item_data in enumerate(cleaned_bom_data["items"], 1):
+                        cleaned_item_data = {k: v for k, v in item_data.items() 
+                                           if k not in ["__islocal", "__unsaved", "name", "parent"]}
+                        cleaned_item_data["idx"] = item_idx
+                        cleaned_item_data["parentfield"] = "items"
+                        cleaned_item_data["parenttype"] = "BOM"
+                        if not cleaned_item_data.get("item_code"):
+                            raise frappe.ValidationError(_(f"Item code is required for BOM item at index {item_idx} in BOM {idx}"))
+                        if not frappe.db.exists("Item", cleaned_item_data["item_code"]):
+                            raise frappe.DoesNotExistError(f"Item {cleaned_item_data['item_code']} does not exist for BOM item at index {item_idx} in BOM {idx}")
+                        bom_doc.append("items", cleaned_item_data)
+                
+                if "operations" in cleaned_bom_data and cleaned_bom_data["operations"]:
+                    bom_doc.operations = []
+                    for op_idx, operation_data in enumerate(cleaned_bom_data["operations"], 1):
+                        cleaned_operation_data = {k: v for k, v in operation_data.items() 
+                                                if k not in ["__islocal", "__unsaved", "name", "parent"]}
+                        cleaned_operation_data["idx"] = op_idx
+                        cleaned_operation_data["parentfield"] = "operations"
+                        cleaned_operation_data["parenttype"] = "BOM"
+                        operation_name = cleaned_operation_data.get("operation", "").strip()
+                        if operation_name and not frappe.db.exists("Operation", operation_name):
+                            try:
+                                operation_doc = frappe.get_doc({
+                                    "doctype": "Operation",
+                                    "operation": operation_name,
+                                    "workstation": cleaned_operation_data.get("workstation")
+                                })
+                                operation_doc.insert()
+                            except Exception as e:
+                                frappe.log_error(f"Error creating Operation {operation_name}: {str(e)}", "Create Operation Error")
+                        bom_doc.append("operations", cleaned_operation_data)
+                
+                if "scrap_items" in cleaned_bom_data and cleaned_bom_data["scrap_items"]:
+                    bom_doc.scrap_items = []
+                    for scrap_idx, scrap_data in enumerate(cleaned_bom_data["scrap_items"], 1):
+                        cleaned_scrap_data = {k: v for k, v in scrap_data.items() 
+                                            if k not in ["__islocal", "__unsaved", "name", "parent"]}
+                        cleaned_scrap_data["idx"] = scrap_idx
+                        cleaned_scrap_data["parentfield"] = "scrap_items"
+                        cleaned_scrap_data["parenttype"] = "BOM"
+                        bom_doc.append("scrap_items", cleaned_scrap_data)
+                
+                bom_doc.insert()
+                bom_doc.submit()
+                
+                if bom_doc.is_default:
+                    frappe.db.set_value("Item", item_code, "default_bom", bom_doc.name)
+                
+                # --- save_item_bom_structure 的核心逻辑复制结束 ---
+
+                # 如果成功，记录 BOM 名称和物料编码
+                successful_boms.append({
+                    "item_code": item_code,
+                    "bom_name": bom_doc.name,
+                    "message": "BOM created successfully"
+                })
+            except Exception as e:
+                # 如果单个 BOM 失败，记录错误信息，但允许其他 BOM 继续处理
+                frappe.log_error(f"Error processing BOM at index {idx} for item {bom_data.get('item', 'Unknown')}: {str(e)}")
+                failed_boms.append({
+                    "item_code": bom_data.get("item", "Unknown"),
+                    "error": str(e),
+                    "original_data": bom_data # 可以选择包含原始数据以便调试
+                })
+        
+        frappe.db.commit() # 所有 BOM 处理成功，提交事务
+        return {
+            "success": True,
+            "message": f"Bulk BOM save operation completed. {len(successful_boms)} successful, {len(failed_boms)} failed.",
+            "successful_boms": successful_boms,
+            "failed_boms": failed_boms
+        }
+
+    except Exception as e:
+        frappe.db.rollback() # 任何一个 BOM 失败，回滚整个事务
+        frappe.log_error(f"Critical error during bulk BOM save: {str(e)}", "Bulk BOM Save Transaction Error")
+        return {
+            "success": False,
+            "message": f"Bulk BOM save operation failed due to a critical error. All changes rolled back. Error: {str(e)}",
+            "successful_boms": [], # 事务回滚，所以成功列表为空
+            "failed_boms": boms_data # 或者将所有原始数据放入失败列表，因为它整体回滚了
+        }
+
 def update_sales_order_item_bom_no(sales_order_no, item_code, bom_no):
     """
     更新销售订单明细中指定物料的BOM编号
