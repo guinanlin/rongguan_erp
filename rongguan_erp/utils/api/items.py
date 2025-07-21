@@ -8,7 +8,7 @@ from erpnext.controllers.item_variant import create_variant
 
 # bench --site site1.local execute rongguan_erp.utils.api.items.get_items_with_attributes --kwargs '{"filters": {"item_group": "成品"}}'
 @frappe.whitelist(allow_guest=False)  # 确保只允许认证用户访问
-def get_items_with_attributes(filters=None, fields=None):
+def get_items_with_attributes(filters=None, fields=None, or_filters=None, order_by=None, limit_page_length=None, limit_start=0):
     if not filters:
         filters = {}
     
@@ -16,6 +16,10 @@ def get_items_with_attributes(filters=None, fields=None):
         'Item',
         filters=filters,
         fields=fields or ["*"],
+        or_filters=or_filters,
+        order_by=order_by,
+        limit_page_length=limit_page_length,
+        limit_start=limit_start,
         pluck='name'
     )
 
