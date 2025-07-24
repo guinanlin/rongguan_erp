@@ -528,3 +528,70 @@ def get_style_and_items_by_sales_order(sales_order_name):
         "custom_style_number": so.custom_style_number,
         "items": items
     }
+
+@frappe.whitelist()
+def get_sales_order_bom_docs(*args, **kwargs):
+    try:
+        # 处理参数 - 支持多种调用方式
+        sales_order_name = None
+        
+        print(f"Debug - args: {args}")
+        print(f"Debug - kwargs: {kwargs}")
+        
+        # bench execute 传递的参数处理
+        if args:
+            # 如果第一个参数是字符串，直接使用
+            if isinstance(args[0], str):
+                sales_order_name = args[0]
+            # 如果第一个参数是字典，从中提取销售订单名称
+            elif isinstance(args[0], dict):
+                sales_order_name = args[0].get('sales_order_name') or args[0].get('name')
+            # 如果参数是元组或列表，尝试解析
+            elif isinstance(args[0], (tuple, list)) and len(args[0]) > 0:
+                if isinstance(args[0][0], str):
+                    sales_order_name = args[0][0]
+                elif isinstance(args[0][0], dict):
+                    sales_order_name = args[0][0].get('sales_order_name') or args[0][0].get('name')
+        
+        # 从关键字参数中获取
+        if not sales_order_name:
+            sales_order_name = kwargs.get('sales_order_name') or kwargs.get('name')
+            
+        print(f"Debug - sales_order_name: {sales_order_name}")
+            
+        if not sales_order_name:
+            return {"status": "error", "message": "销售订单名称不能为空"}
+            
+        # 检查销售订单是否存在
+        if not frappe.db.exists("Sales Order", sales_order_name):
+            return {"status": "error", "message": f"销售订单 '{sales_order_name}' 不存在"}
+            
+        so = frappe.get_doc("Sales Order", sales_order_name)
+
+        result = {
+            "sales_order": so.name,
+            "items": []
+        }
+
+        for row in so.items:
+            if not row.bom_no:
+                continue
+
+            bom_doc = frappe.get_doc("BOM", row.bom_no)
+            item_doc = frappe.get_doc("Item", bom_doc.item)
+
+            result["items"].append({
+                "item_row_name": row.name,
+                "bom_no": row.bom_no,
+                "bom_doc": bom_doc.as_dict(),              # BOM 的完整 Doc
+                "bom_item_doc": item_doc.as_dict()         # BOM 对应物料的完整 Doc
+            })
+
+        return {
+            "status": "success",
+            "data": result
+        }
+
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "get_sales_order_bom_docs failed")
+        return {"status": "error", "message": str(e)}    

@@ -6,6 +6,7 @@ import json
 from erpnext.controllers.item_variant import create_variant
 
 
+
 # bench --site site1.local execute rongguan_erp.utils.api.items.get_items_with_attributes --kwargs '{"filters": {"item_group": "成品"}}'
 @frappe.whitelist(allow_guest=False)  # 确保只允许认证用户访问
 def get_items_with_attributes(filters=None, fields=None, or_filters=None, order_by=None, limit_page_length=None, limit_start=0):
@@ -1190,3 +1191,141 @@ def update_sales_order_item_bom_no(sales_order_no, item_code, bom_no):
         print(f"更新过程中出错: {str(e)}")
         frappe.log_error(f"更新销售订单 {sales_order_no} 中物料 {item_code} 的BOM编号时出错: {str(e)}", "Update Sales Order Item BOM Error")
         return {"error": f"更新失败: {str(e)}"}
+
+
+@frappe.whitelist(allow_guest=False)
+def update_sales_order_bom(**args):
+    """
+    更新销售订单的 BOM 编号
+    
+    使用 ERPNext 标准的 get_default_bom 方法自动填充销售订单明细的 BOM 编号
+    系统会根据物料的默认 BOM 设置自动填充空的 bom_no 字段
+    
+    :param args: 包含 sales_order_name 的参数字典
+        - sales_order_name: 销售订单编号
+    """
+    try:
+        sales_order_name = args.get("sales_order_name")
+        
+        if not sales_order_name:
+            return {"status": "error", "message": "sales_order_name 参数不能为空"}
+        
+        # 检查销售订单是否存在
+        if not frappe.db.exists("Sales Order", sales_order_name):
+            return {"status": "error", "message": f"销售订单 {sales_order_name} 不存在"}
+        
+        # 获取销售订单文档
+        so = frappe.get_doc("Sales Order", sales_order_name)
+        
+        print(f"=== 调试信息 ===")
+        print(f"销售订单: {sales_order_name}")
+        print(f"明细项数量: {len(so.items)}")
+        
+        # 记录更新前的状态
+        before_update = {item.name: item.bom_no for item in so.items}
+        print(f"更新前的 BOM 状态: {before_update}")
+        
+        # 遍历销售订单明细，为每个物料设置默认 BOM
+        updated_items = []
+        for idx, item in enumerate(so.items):
+            print(f"检查第 {idx+1} 项: {item.item_code}")
+            print(f"  当前 BOM: {item.bom_no}")
+            
+            if item.item_code:
+                # 使用 ERPNext 标准的 get_default_bom 方法获取默认 BOM
+                from erpnext.stock.get_item_details import get_default_bom
+                default_bom = get_default_bom(item.item_code)
+                print(f"  默认 BOM: {default_bom}")
+                
+                if default_bom and not item.bom_no:
+                    item.bom_no = default_bom
+                    updated_items.append({
+                        "item_code": item.item_code,
+                        "item_name": item.item_name,
+                        "bom_no": default_bom,
+                        "row_name": item.name
+                    })
+                    print(f"  已更新 BOM: {default_bom}")
+                elif not default_bom:
+                    print(f"  物料 {item.item_code} 没有默认 BOM")
+                elif item.bom_no:
+                    print(f"  物料 {item.item_code} 已有 BOM: {item.bom_no}")
+        
+        # 调用 validate 方法确保所有验证逻辑被执行
+        print(f"调用 validate 方法...")
+        so.validate()
+        
+        # 保存文档
+        so.save()
+        frappe.db.commit()
+        
+        print(f"更新完成，共更新 {len(updated_items)} 项")
+        
+        return {
+            "status": "success", 
+            "message": f"Successfully updated BOM for Sales Order {sales_order_name}",
+            "sales_order": sales_order_name,
+            "updated_items_count": len(updated_items),
+            "updated_items": updated_items,
+            "total_items_count": len(so.items),
+            "debug_info": {
+                "before_update": before_update,
+                "after_update": {item.name: item.bom_no for item in so.items}
+            }
+        }
+        
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "update_sales_order_bom failed")
+        return {"status": "error", "message": str(e)}
+
+@frappe.whitelist(allow_guest=False)
+def check_sales_order_bom(**args):
+    """
+    检查销售订单的 BOM 状态
+    
+    :param args: 包含 sales_order 的参数字典
+        - sales_order: 销售订单编号
+    """
+    try:
+        sales_order = args.get("sales_order")
+        
+        if not sales_order:
+            return {"status": "error", "message": "sales_order 参数不能为空"}
+        
+        # 检查销售订单是否存在
+        if not frappe.db.exists("Sales Order", sales_order):
+            return {"status": "error", "message": f"销售订单 {sales_order} 不存在"}
+        
+        # 获取销售订单文档
+        so = frappe.get_doc("Sales Order", sales_order)
+        
+        items_info = []
+        for idx, item in enumerate(so.items):
+            # 获取物料的默认 BOM
+            from erpnext.stock.get_item_details import get_default_bom
+            default_bom = get_default_bom(item.item_code)
+            
+            # 获取物料主数据中的默认 BOM
+            item_default_bom = frappe.get_value("Item", item.item_code, "default_bom")
+            
+            items_info.append({
+                "idx": idx + 1,
+                "item_code": item.item_code,
+                "item_name": item.item_name,
+                "current_bom": item.bom_no,
+                "default_bom_from_item": item_default_bom,
+                "default_bom_from_function": default_bom,
+                "has_bom": bool(item.bom_no),
+                "has_default_bom": bool(default_bom)
+            })
+        
+        return {
+            "status": "success",
+            "sales_order": sales_order,
+            "total_items": len(so.items),
+            "items_info": items_info
+        }
+        
+    except Exception as e:
+        frappe.log_error(frappe.get_traceback(), "check_sales_order_bom failed")
+        return {"status": "error", "message": str(e)}
