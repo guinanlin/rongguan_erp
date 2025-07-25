@@ -1093,9 +1093,12 @@ def bulk_save_item_boms(boms_data):
                     "original_data": bom_data # 可以选择包含原始数据以便调试
                 })
         
+        # 如果有任何BOM处理失败，则整个批量操作的结果应被视为不成功
+        operation_successful = not failed_boms
+
         frappe.db.commit() # 所有 BOM 处理成功，提交事务
         return {
-            "success": True,
+            "success": operation_successful,
             "message": f"Bulk BOM save operation completed. {len(successful_boms)} successful, {len(failed_boms)} failed.",
             "successful_boms": successful_boms,
             "failed_boms": failed_boms
