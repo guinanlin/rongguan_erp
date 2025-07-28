@@ -119,6 +119,9 @@ def create_material_request_bench(*args):
 def create_material_request_from_dict(data_dict=None):
     """从字典数据创建采购计划"""
     
+    print("=== 开始创建采购计划 ===")
+    print(f"原始 data_dict: {data_dict}")
+    
     # 处理JSON数据
     if not data_dict and frappe.request and frappe.request.json:
         data = frappe.request.json
@@ -136,6 +139,9 @@ def create_material_request_from_dict(data_dict=None):
     if not data_dict:
         frappe.throw("data_dict参数是必需的")
     
+    print(f"处理后的 data_dict: {data_dict}")
+    print(f"data_dict 中的 title 字段: {data_dict.get('title', '未设置')}")
+    
     # 创建新的Material Request
     material_request = frappe.new_doc("Material Request")
     
@@ -147,18 +153,49 @@ def create_material_request_from_dict(data_dict=None):
     
     for field in main_fields:
         if field in data_dict:
-            material_request.set(field, data_dict[field])
+            value = data_dict[field]
+            material_request.set(field, value)
+            if field == 'title':
+                print(f"设置 title 字段为: {value}")
+    
+    print(f"设置字段后的 material_request.title: {material_request.title}")
     
     # 添加物料项
     if "items" in data_dict:
         for item_data in data_dict["items"]:
             material_request.append("items", item_data)
     
-    material_request.insert()
+    print(f"插入前 material_request.title: {material_request.title}")
+    print(f"物料项数量: {len(material_request.items)}")
     
-    return {
-        "status": "success", 
-        "message": f"采购计划已创建: {material_request.name}",
-        "material_request": material_request.name,
-        "doc": material_request.as_dict()
-    }
+    # 检查是否有物料项
+    if not material_request.items:
+        print("警告：没有物料项，无法创建采购计划")
+        return {
+            "status": "error",
+            "message": "采购计划必须包含至少一个物料项",
+            "error": "items 字段不能为空"
+        }
+    
+    material_request.insert()
+    print(f"插入后 material_request.title: {material_request.title}")
+    
+    # 提交采购计划
+    try:
+        material_request.submit()
+        print(f"采购计划已提交: {material_request.name}")
+        return {
+            "status": "success", 
+            "message": f"采购计划已创建并提交: {material_request.name}",
+            "material_request": material_request.name,
+            "doc": material_request.as_dict()
+        }
+    except Exception as e:
+        print(f"提交采购计划失败: {str(e)}")
+        return {
+            "status": "partial_success",
+            "message": f"采购计划已创建但提交失败: {material_request.name}",
+            "material_request": material_request.name,
+            "error": str(e),
+            "doc": material_request.as_dict()
+        }
