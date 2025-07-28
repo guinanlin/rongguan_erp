@@ -981,19 +981,82 @@ def bulk_save_item_boms(boms_data):
     Returns:
         dict: 批量保存的结果，包含成功和失败的 BOM 列表及总体状态。
     """
+    
+    def check_circular_reference(boms_list):
+        """检查批量BOM数据中的循环引用"""
+        print(f"=== 检查循环引用 ===")
+        
+        # 构建物料依赖关系图
+        dependency_graph = {}
+        for bom_data in boms_list:
+            item_code = bom_data.get('item')
+            if item_code and 'items' in bom_data:
+                dependency_graph[item_code] = []
+                for item in bom_data['items']:
+                    if item.get('item_code') and item.get('item_code') != item_code:
+                        dependency_graph[item_code].append(item.get('item_code'))
+        
+        print(f"依赖关系图: {dependency_graph}")
+        
+        # 检查循环引用
+        def has_cycle(node, visited, rec_stack):
+            visited[node] = True
+            rec_stack[node] = True
+            
+            for neighbor in dependency_graph.get(node, []):
+                if neighbor in dependency_graph:  # 只检查在批量数据中的物料
+                    if not visited.get(neighbor, False):
+                        if has_cycle(neighbor, visited, rec_stack):
+                            return True
+                    elif rec_stack.get(neighbor, False):
+                        return True
+            
+            rec_stack[node] = False
+            return False
+        
+        # 检查每个物料是否有循环引用
+        for item_code in dependency_graph:
+            visited = {}
+            rec_stack = {}
+            if has_cycle(item_code, visited, rec_stack):
+                print(f"发现循环引用，涉及物料: {item_code}")
+                return True
+        
+        print(f"未发现循环引用")
+        return False
+    
+    print(f"=== bulk_save_item_boms 开始 ===")
+    print(f"接收到的 boms_data 类型: {type(boms_data)}")
+    print(f"接收到的 boms_data 内容: {boms_data}")
+    
     if not boms_data:
         return {"error": "boms_data is required and cannot be empty"}
 
     # 如果 boms_data 是字符串，尝试解析为 JSON
     if isinstance(boms_data, str):
         try:
+            print(f"=== 解析JSON字符串 ===")
             boms_data = json.loads(boms_data)
+            print(f"解析后的 boms_data 类型: {type(boms_data)}")
+            print(f"解析后的 boms_data 长度: {len(boms_data) if isinstance(boms_data, list) else 'N/A'}")
         except json.JSONDecodeError:
             frappe.throw(_("Invalid JSON format for boms_data"))
 
     if not isinstance(boms_data, list):
         frappe.throw(_("boms_data must be a list of BOM dictionaries"))
 
+    print(f"=== 验证数据格式 ===")
+    print(f"BOM列表长度: {len(boms_data)}")
+    
+    # 检查循环引用
+    if check_circular_reference(boms_data):
+        return {
+            "success": False,
+            "message": "检测到BOM循环引用，请检查BOM结构",
+            "successful_boms": [],
+            "failed_boms": [{"error": "Circular reference detected in BOM structure"}]
+        }
+    
     successful_boms = []
     failed_boms = []
     
@@ -1001,45 +1064,80 @@ def bulk_save_item_boms(boms_data):
 
     try:
         for idx, bom_data in enumerate(boms_data):
+            print(f"\n=== 处理第 {idx+1} 个 BOM ===")
+            print(f"BOM数据: {bom_data}")
+            
             try:
-                # 调用现有的 save_item_bom_structure 来处理单个 BOM
-                # 注意：这里我们调用的是内部逻辑，而不是 whitelisted 的接口本身，
-                # 因为整个事务由 bulk_save_item_boms 统一管理。
-                # 为此，我们需要确保 save_item_bom_structure 的核心逻辑可以被复用。
-                # 为了简化，这里直接将 save_item_bom_structure 的核心逻辑复制过来，
-                # 或者可以重构 save_item_bom_structure 使其返回更详细的结果，并在外部捕获异常。
-                
-                # --- save_item_bom_structure 的核心逻辑复制开始 ---
+                # 验证基本字段
+                print(f"检查 doctype: {bom_data.get('doctype')}")
                 if bom_data.get("doctype") != "BOM":
                     raise frappe.ValidationError(_("Invalid doctype. Must be 'BOM' for BOM at index {0}").format(idx))
                 
                 item_code = bom_data.get("item")
+                print(f"物料编码: {item_code}")
                 if not item_code:
                     raise frappe.ValidationError(_("Item code is required for BOM at index {0}").format(idx))
                 
+                print(f"检查物料是否存在: {item_code}")
                 if not frappe.db.exists("Item", item_code):
                     raise frappe.DoesNotExistError(f"Item {item_code} does not exist for BOM at index {idx}")
 
+                # 清理数据
                 temp_fields = ["__islocal", "__unsaved", "name"]
                 cleaned_bom_data = {k: v for k, v in bom_data.items() if k not in temp_fields}
+                print(f"清理后的BOM数据字段: {list(cleaned_bom_data.keys())}")
                 
+                # 检查BOM Items
+                if "items" in cleaned_bom_data and cleaned_bom_data["items"]:
+                    print(f"BOM Items 数量: {len(cleaned_bom_data['items'])}")
+                    for item_idx, item_data in enumerate(cleaned_bom_data["items"]):
+                        print(f"  检查第 {item_idx+1} 个BOM Item: {item_data.get('item_code')}")
+                        if not item_data.get("item_code"):
+                            raise frappe.ValidationError(_(f"Item code is required for BOM item at index {item_idx} in BOM {idx}"))
+                        if not frappe.db.exists("Item", item_data["item_code"]):
+                            raise frappe.DoesNotExistError(f"Item {item_data['item_code']} does not exist for BOM item at index {item_idx} in BOM {idx}")
+                
+                # 检查BOM Operations
+                if "operations" in cleaned_bom_data and cleaned_bom_data["operations"]:
+                    print(f"BOM Operations 数量: {len(cleaned_bom_data['operations'])}")
+                    for op_idx, operation_data in enumerate(cleaned_bom_data["operations"]):
+                        print(f"  检查第 {op_idx+1} 个BOM Operation: {operation_data.get('operation')}")
+                
+                print(f"创建BOM文档...")
                 bom_doc = frappe.get_doc(cleaned_bom_data)
                 
+                # 处理BOM Items
                 if "items" in cleaned_bom_data and cleaned_bom_data["items"]:
+                    print(f"处理BOM Items...")
                     bom_doc.items = []
+                    filtered_items = []
+                    
                     for item_idx, item_data in enumerate(cleaned_bom_data["items"], 1):
                         cleaned_item_data = {k: v for k, v in item_data.items() 
                                            if k not in ["__islocal", "__unsaved", "name", "parent"]}
                         cleaned_item_data["idx"] = item_idx
                         cleaned_item_data["parentfield"] = "items"
                         cleaned_item_data["parenttype"] = "BOM"
-                        if not cleaned_item_data.get("item_code"):
-                            raise frappe.ValidationError(_(f"Item code is required for BOM item at index {item_idx} in BOM {idx}"))
-                        if not frappe.db.exists("Item", cleaned_item_data["item_code"]):
-                            raise frappe.DoesNotExistError(f"Item {cleaned_item_data['item_code']} does not exist for BOM item at index {item_idx} in BOM {idx}")
+                        
+                        # 检查是否为自引用（物料编码与当前BOM的物料编码相同）
+                        if cleaned_item_data.get('item_code') == item_code:
+                            print(f"  跳过自引用的BOM Item: {cleaned_item_data.get('item_code')} (与当前BOM物料 {item_code} 相同)")
+                            continue
+                        
+                        print(f"  添加BOM Item: {cleaned_item_data.get('item_code')}")
+                        filtered_items.append(cleaned_item_data)
                         bom_doc.append("items", cleaned_item_data)
+                    
+                    print(f"  原始BOM Items数量: {len(cleaned_bom_data['items'])}")
+                    print(f"  过滤后BOM Items数量: {len(filtered_items)}")
+                    
+                    # 如果没有有效的BOM Items，添加一个默认的原材料项
+                    if not filtered_items:
+                        print(f"  警告: 没有有效的BOM Items，可能需要添加默认原材料")
                 
+                # 处理BOM Operations
                 if "operations" in cleaned_bom_data and cleaned_bom_data["operations"]:
+                    print(f"处理BOM Operations...")
                     bom_doc.operations = []
                     for op_idx, operation_data in enumerate(cleaned_bom_data["operations"], 1):
                         cleaned_operation_data = {k: v for k, v in operation_data.items() 
@@ -1048,6 +1146,7 @@ def bulk_save_item_boms(boms_data):
                         cleaned_operation_data["parentfield"] = "operations"
                         cleaned_operation_data["parenttype"] = "BOM"
                         operation_name = cleaned_operation_data.get("operation", "").strip()
+                        print(f"  添加BOM Operation: {operation_name}")
                         if operation_name and not frappe.db.exists("Operation", operation_name):
                             try:
                                 operation_doc = frappe.get_doc({
@@ -1056,11 +1155,14 @@ def bulk_save_item_boms(boms_data):
                                     "workstation": cleaned_operation_data.get("workstation")
                                 })
                                 operation_doc.insert()
+                                print(f"    创建新Operation: {operation_name}")
                             except Exception as e:
                                 frappe.log_error(f"Error creating Operation {operation_name}: {str(e)}", "Create Operation Error")
                         bom_doc.append("operations", cleaned_operation_data)
                 
+                # 处理Scrap Items
                 if "scrap_items" in cleaned_bom_data and cleaned_bom_data["scrap_items"]:
+                    print(f"处理Scrap Items...")
                     bom_doc.scrap_items = []
                     for scrap_idx, scrap_data in enumerate(cleaned_bom_data["scrap_items"], 1):
                         cleaned_scrap_data = {k: v for k, v in scrap_data.items() 
@@ -1070,31 +1172,47 @@ def bulk_save_item_boms(boms_data):
                         cleaned_scrap_data["parenttype"] = "BOM"
                         bom_doc.append("scrap_items", cleaned_scrap_data)
                 
+                print(f"插入BOM文档...")
                 bom_doc.insert()
+                print(f"BOM文档插入成功，名称: {bom_doc.name}")
+                
+                print(f"提交BOM文档...")
                 bom_doc.submit()
+                print(f"BOM文档提交成功")
                 
                 if bom_doc.is_default:
+                    print(f"设置为默认BOM...")
                     frappe.db.set_value("Item", item_code, "default_bom", bom_doc.name)
                 
-                # --- save_item_bom_structure 的核心逻辑复制结束 ---
-
                 # 如果成功，记录 BOM 名称和物料编码
                 successful_boms.append({
                     "item_code": item_code,
                     "bom_name": bom_doc.name,
                     "message": "BOM created successfully"
                 })
+                print(f"第 {idx+1} 个BOM处理成功: {item_code} -> {bom_doc.name}")
+                
             except Exception as e:
+                print(f"第 {idx+1} 个BOM处理失败: {str(e)}")
+                print(f"错误类型: {type(e).__name__}")
+                print(f"错误详情: {frappe.get_traceback()}")
+                
                 # 如果单个 BOM 失败，记录错误信息，但允许其他 BOM 继续处理
-                frappe.log_error(f"Error processing BOM at index {idx} for item {bom_data.get('item', 'Unknown')}: {str(e)}")
+                frappe.log_error(f"Error processing BOM at index {idx} for item {bom_data.get('item', 'Unknown')}: {str(e)}", "Bulk BOM Save Error")
                 failed_boms.append({
                     "item_code": bom_data.get("item", "Unknown"),
                     "error": str(e),
+                    "error_type": type(e).__name__,
                     "original_data": bom_data # 可以选择包含原始数据以便调试
                 })
         
         # 如果有任何BOM处理失败，则整个批量操作的结果应被视为不成功
         operation_successful = not failed_boms
+
+        print(f"\n=== 批量处理完成 ===")
+        print(f"成功数量: {len(successful_boms)}")
+        print(f"失败数量: {len(failed_boms)}")
+        print(f"操作是否成功: {operation_successful}")
 
         frappe.db.commit() # 所有 BOM 处理成功，提交事务
         return {
@@ -1105,6 +1223,11 @@ def bulk_save_item_boms(boms_data):
         }
 
     except Exception as e:
+        print(f"\n=== 批量处理出现严重错误 ===")
+        print(f"错误: {str(e)}")
+        print(f"错误类型: {type(e).__name__}")
+        print(f"错误详情: {frappe.get_traceback()}")
+        
         frappe.db.rollback() # 任何一个 BOM 失败，回滚整个事务
         frappe.log_error(f"Critical error during bulk BOM save: {str(e)}", "Bulk BOM Save Transaction Error")
         return {
