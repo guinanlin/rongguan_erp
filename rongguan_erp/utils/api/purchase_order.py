@@ -148,7 +148,7 @@ def create_material_request_from_dict(data_dict=None):
     # 设置主文档字段
     main_fields = [
         "material_request_type", "company", "transaction_date", 
-        "schedule_date", "status", "title", "customer"
+        "schedule_date", "status", "title", "customer","custom_sales_order_number"
     ]
     
     for field in main_fields:
