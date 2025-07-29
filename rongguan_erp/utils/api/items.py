@@ -434,6 +434,19 @@ def get_item_available_stock(item_code, warehouse=None, company=None):
                 as_dict=True
             )
             
+            # 获取Material Request的待处理数量
+            material_request_pending = frappe.db.sql("""
+                SELECT 
+                    SUM(mri.qty - mri.ordered_qty) as pending_qty
+                FROM `tabMaterial Request Item` mri
+                JOIN `tabMaterial Request` mr ON mri.parent = mr.name
+                WHERE mri.item_code = %s
+                AND mr.docstatus = 1
+                AND mr.status != 'Cancelled'
+            """, (item_code,), as_dict=True)
+            
+            requested_qty = material_request_pending[0].pending_qty if material_request_pending and material_request_pending[0] and material_request_pending[0].pending_qty is not None else 0
+            
             if bin_data:
                 stock_info = {
                     "warehouse": warehouse,
@@ -441,7 +454,8 @@ def get_item_available_stock(item_code, warehouse=None, company=None):
                     "projected_qty": bin_data.projected_qty or 0,
                     "reserved_qty": bin_data.reserved_qty or 0,
                     "ordered_qty": bin_data.ordered_qty or 0,
-                    "planned_qty": bin_data.planned_qty or 0
+                    "planned_qty": bin_data.planned_qty or 0,
+                    "requested_qty": requested_qty
                 }
             else:
                 stock_info = {
@@ -450,7 +464,8 @@ def get_item_available_stock(item_code, warehouse=None, company=None):
                     "projected_qty": 0,
                     "reserved_qty": 0,
                     "ordered_qty": 0,
-                    "planned_qty": 0
+                    "planned_qty": 0,
+                    "requested_qty": requested_qty
                 }
         else:
             # 获取所有仓库的总库存
@@ -471,6 +486,19 @@ def get_item_available_stock(item_code, warehouse=None, company=None):
                 AND (w.company = %s OR %s IS NULL)
             """, (item_code, company, company), as_dict=True)
             
+            # 获取Material Request的待处理数量
+            material_request_pending = frappe.db.sql("""
+                SELECT 
+                    SUM(mri.qty - mri.ordered_qty) as pending_qty
+                FROM `tabMaterial Request Item` mri
+                JOIN `tabMaterial Request` mr ON mri.parent = mr.name
+                WHERE mri.item_code = %s
+                AND mr.docstatus = 1
+                AND mr.status != 'Cancelled'
+            """, (item_code,), as_dict=True)
+            
+            requested_qty = material_request_pending[0].pending_qty if material_request_pending and material_request_pending[0] and material_request_pending[0].pending_qty is not None else 0
+            
             if bin_data and bin_data[0]:
                 data = bin_data[0]
                 stock_info = {
@@ -480,6 +508,7 @@ def get_item_available_stock(item_code, warehouse=None, company=None):
                     "reserved_qty": data.reserved_qty or 0,
                     "ordered_qty": data.ordered_qty or 0,
                     "planned_qty": data.planned_qty or 0,
+                    "requested_qty": requested_qty,
                     "company": company
                 }
             else:
@@ -490,6 +519,7 @@ def get_item_available_stock(item_code, warehouse=None, company=None):
                     "reserved_qty": 0,
                     "ordered_qty": 0,
                     "planned_qty": 0,
+                    "requested_qty": requested_qty,
                     "company": company
                 }
         
