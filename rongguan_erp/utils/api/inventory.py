@@ -5,6 +5,7 @@ from frappe.utils import now_datetime, getdate
 from typing import Dict, List, Optional, Any
 
 
+@frappe.whitelist()
 def get_stock_entries_with_items(
     page: int = 1,
     page_length: int = 10,
@@ -78,10 +79,9 @@ def get_stock_entries_with_items(
                     'valuation_rate', 'amount', 'serial_no', 'batch_no',
                     'actual_qty', 'transferred_qty', 'bom_no', 
                     'allow_zero_valuation_rate', 't_warehouse', 's_warehouse', 
-                    'cost_center', 'expense_account', 'is_finished_item', 
-                    'is_process_loss', 'process_loss_percentage', 'process_loss_qty', 
-                    'sample_quantity', 'uom', 'conversion_factor', 'stock_uom', 
-                    'stock_qty', 'idx'
+                    'cost_center', 'expense_account', 'is_finished_item',
+                    'sample_quantity', 'uom', 'conversion_factor', 'stock_uom',
+                    'creation', 'modified', 'owner', 'modified_by', 'idx'
                 ],
                 filters={'parent': entry.name},
                 order_by='idx',
@@ -115,6 +115,7 @@ def get_stock_entries_with_items(
         }
 
 
+@frappe.whitelist()
 def get_stock_entry_detail(stock_entry_name: str) -> Dict[str, Any]:
     """
     获取单个Stock Entry的详细信息
@@ -139,9 +140,8 @@ def get_stock_entry_detail(stock_entry_name: str) -> Dict[str, Any]:
                 'warehouse', 'target_warehouse', 'actual_qty', 'transferred_qty',
                 'bom_no', 'allow_zero_valuation_rate', 't_warehouse',
                 's_warehouse', 'cost_center', 'expense_account',
-                'is_finished_item', 'is_process_loss', 'process_loss_percentage',
-                'process_loss_qty', 'sample_quantity', 'uom', 'conversion_factor',
-                'stock_uom', 'stock_qty', 'idx'
+                'is_finished_item', 'sample_quantity', 'uom', 'conversion_factor',
+                'stock_uom', 'creation', 'modified', 'owner', 'modified_by', 'idx'
             ],
             filters={'parent': stock_entry_name},
             order_by='idx',
@@ -162,6 +162,7 @@ def get_stock_entry_detail(stock_entry_name: str) -> Dict[str, Any]:
         }
 
 
+@frappe.whitelist()
 def search_stock_entries(
     search_term: str,
     page: int = 1,
