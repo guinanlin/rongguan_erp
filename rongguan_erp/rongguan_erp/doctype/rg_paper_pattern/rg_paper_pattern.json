@@ -8,6 +8,7 @@
  "field_order": [
   "section_break_images",
   "style_no",
+  "sales_order",
   "style_name",
   "style_code",
   "customer",
@@ -105,13 +106,19 @@
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "sales_order",
+   "fieldtype": "Link",
+   "label": "Sales Order",
+   "options": "Sales Order"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-07-01 01:33:42.405542",
+ "modified": "2025-08-05 13:01:37.811919",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "RG Paper Pattern",
