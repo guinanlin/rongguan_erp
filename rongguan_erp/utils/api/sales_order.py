@@ -199,6 +199,7 @@ def save_sales_order(order_data=None, *args, **kwargs):
                  print(f"so.name========================: {so.name}")
 
             so.insert(ignore_permissions=True)
+            so.submit()
             
             # 提交销售订单的保存
             # frappe.db.commit() # 移除此行，将在生产订单创建后统一提交
