@@ -581,10 +581,26 @@ def get_sales_order_bom_docs(*args, **kwargs):
             bom_doc = frappe.get_doc("BOM", row.bom_no)
             item_doc = frappe.get_doc("Item", bom_doc.item)
 
+            # 为每个 BOM Item 添加对应的物料信息（包括 item_group）
+            enhanced_bom_items = []
+            for bom_item in bom_doc.items:
+                # 获取 BOM Item 对应的物料完整信息
+                bom_item_material_doc = frappe.get_doc("Item", bom_item.item_code)
+                
+                # 创建增强版的 BOM Item
+                enhanced_item = bom_item.as_dict()
+                enhanced_item["item_group"] = bom_item_material_doc.item_group  # 添加 item_group
+                
+                enhanced_bom_items.append(enhanced_item)
+
+            # 创建增强版的 bom_doc
+            enhanced_bom_doc = bom_doc.as_dict()
+            enhanced_bom_doc["items"] = enhanced_bom_items  # 替换为增强版的 items
+
             result["items"].append({
                 "item_row_name": row.name,
                 "bom_no": row.bom_no,
-                "bom_doc": bom_doc.as_dict(),              # BOM 的完整 Doc
+                "bom_doc": enhanced_bom_doc,              # 使用增强版的 BOM Doc
                 "bom_item_doc": item_doc.as_dict()         # BOM 对应物料的完整 Doc
             })
 
