@@ -1213,6 +1213,7 @@ def bulk_save_item_boms(boms_data):
                 if bom_doc.is_default:
                     print(f"设置为默认BOM...")
                     frappe.db.set_value("Item", item_code, "default_bom", bom_doc.name)
+                    frappe.db.commit()  # 确保默认BOM设置被提交
                 
                 # 如果成功，记录 BOM 名称和物料编码
                 successful_boms.append({
@@ -1373,49 +1374,87 @@ def update_sales_order_bom(**args):
         # 获取销售订单文档
         so = frappe.get_doc("Sales Order", sales_order_name)
         
-        print(f"=== 调试信息 ===")
-        print(f"销售订单: {sales_order_name}")
-        print(f"明细项数量: {len(so.items)}")
-        
         # 记录更新前的状态
         before_update = {item.name: item.bom_no for item in so.items}
-        print(f"更新前的 BOM 状态: {before_update}")
         
         # 遍历销售订单明细，为每个物料设置默认 BOM
         updated_items = []
         for idx, item in enumerate(so.items):
-            print(f"检查第 {idx+1} 项: {item.item_code}")
-            print(f"  当前 BOM: {item.bom_no}")
-            
             if item.item_code:
                 # 使用 ERPNext 标准的 get_default_bom 方法获取默认 BOM
                 from erpnext.stock.get_item_details import get_default_bom
                 default_bom = get_default_bom(item.item_code)
-                print(f"  默认 BOM: {default_bom}")
                 
-                if default_bom and not item.bom_no:
+                # 检查是否需要更新 BOM
+                if default_bom and (not item.bom_no or item.bom_no != default_bom):
                     item.bom_no = default_bom
                     updated_items.append({
                         "item_code": item.item_code,
                         "item_name": item.item_name,
                         "bom_no": default_bom,
-                        "row_name": item.name
+                        "row_name": item.name,
+                        "previous_bom": item.bom_no  # 记录之前的 BOM
                     })
-                    print(f"  已更新 BOM: {default_bom}")
-                elif not default_bom:
-                    print(f"  物料 {item.item_code} 没有默认 BOM")
-                elif item.bom_no:
-                    print(f"  物料 {item.item_code} 已有 BOM: {item.bom_no}")
         
         # 调用 validate 方法确保所有验证逻辑被执行
-        print(f"调用 validate 方法...")
-        so.validate()
+        try:
+            so.validate()
+        except Exception as e:
+            frappe.log_error(frappe.get_traceback(), "validate failed")
+            raise
+
+        try:
+            # 检查文档状态
+            if so.docstatus == 1:  # 已提交状态
+                print(f"\n=== 开始更新销售订单 {so.name} 的 BOM ===")
+                
+                for item in so.items:
+                    if item.item_code:
+                        from erpnext.stock.get_item_details import get_default_bom
+                        
+                        # 记录初始状态
+                        initial_bom = item.bom_no
+                        print(f"物料: {item.item_code}")
+                        print(f"  初始 BOM: {initial_bom}")
+                        
+                        # 获取默认 BOM
+                        default_bom = get_default_bom(item.item_code)
+                        print(f"  默认 BOM: {default_bom}")
+                        
+                        if default_bom:
+                            print(f"  准备更新 BOM")
+                            
+                            # 直接使用 frappe.db.set_value 方法
+                            frappe.db.set_value(
+                                "Sales Order Item", 
+                                item.name, 
+                                "bom_no", 
+                                default_bom, 
+                                update_modified=True
+                            )
+                            
+                            # 验证更新结果
+                            updated_bom = frappe.db.get_value("Sales Order Item", item.name, "bom_no")
+                            print(f"  更新后 BOM: {updated_bom}")
+                            
+                            # 对比更新前后的变化
+                            if initial_bom != updated_bom:
+                                print(f"  BOM 已成功从 {initial_bom} 更新到 {updated_bom}")
+                            else:
+                                print(f"  ❌ BOM 更新失败，仍为 {updated_bom}")
+                
+                frappe.db.commit()
+                print("=== BOM 更新完成 ===")
+            else:
+                # 草稿状态使用正常保存
+                so.save(ignore_version=True)
+                frappe.db.commit()
+        except Exception as e:
+            frappe.log_error(frappe.get_traceback(), "save failed")
+            raise
         
-        # 保存文档
-        so.save()
-        frappe.db.commit()
-        
-        print(f"更新完成，共更新 {len(updated_items)} 项")
+        # 保存后打印每个物料的 BOM 信息用于跟踪
+        after_update = {item.name: item.bom_no for item in so.items}
         
         return {
             "status": "success", 
@@ -1426,7 +1465,7 @@ def update_sales_order_bom(**args):
             "total_items_count": len(so.items),
             "debug_info": {
                 "before_update": before_update,
-                "after_update": {item.name: item.bom_no for item in so.items}
+                "after_update": after_update
             }
         }
         
