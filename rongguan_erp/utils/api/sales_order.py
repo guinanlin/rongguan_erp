@@ -456,11 +456,38 @@ def get_sales_order_detail(sales_order_number):
             item_dict["attributes"] = enriched_attributes
             items_with_attributes.append(item_dict)
 
+        # 获取销售订单对应的样衣信息 (RG Pattern)
+        sample_info = None
+        try:
+            # 查询与销售订单关联的 RG Pattern 文档
+            rg_pattern_docs = frappe.get_all(
+                "RG Pattern",
+                filters={"sales_order": sales_order_number},
+                fields=[
+                    "name", "style_no", "style_name", "customer_name", "pattern_name",
+                    "sample_start_time", "sample_end_time", "handwork_machine_cost",
+                    "special_process_cost", "version", "season", "sample_type",
+                    "category", "sample_grade", "year", "status", "remarks",
+                    "images", "files", "sample_workers"
+                ]
+            )
+            
+            if rg_pattern_docs:
+                # 如果有多个样衣记录，取第一个
+                sample_info = rg_pattern_docs[0]
+                print(f"Found RG Pattern for sales order {sales_order_number}: {sample_info}")
+            else:
+                print(f"No RG Pattern found for sales order {sales_order_number}")
+                
+        except Exception as e:
+            print(f"Error fetching RG Pattern for sales order {sales_order_number}: {str(e)}")
+
         return {
             "data": {
                 **sales_order.as_dict(),
                 "items": items_with_attributes,
-                "styleItem": styleItem
+                "styleItem": styleItem,
+                "sample": sample_info
             },
             "message": "Success",
             "success": True
