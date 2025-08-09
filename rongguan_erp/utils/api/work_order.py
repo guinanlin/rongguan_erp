@@ -27,7 +27,7 @@ def convert_employee_to_user_id(employee_input):
         except (json.JSONDecodeError, TypeError):
             # 如果不是JSON，则作为单个员工ID处理
             employee_list = [employee_input]
-    elif isinstance(employee_list, list):
+    elif isinstance(employee_input, list):
         employee_list = employee_input
     else:
         employee_list = [str(employee_input)]
@@ -905,12 +905,13 @@ def get_work_order_assignments(work_order_name):
 
 
 @frappe.whitelist()
-def batch_assign_work_orders(assignments_data):
+def batch_assign_work_orders(**args):
     """
     批量分配工单的白名单API方法
     
     Args:
-        assignments_data: 分配数据列表，每个元素包含工单名称和分配信息
+        **args: 关键字参数，支持以下格式：
+        - assignments_data: 分配数据列表，每个元素包含工单名称和分配信息
         格式: [
             {
                 "work_order_name": "MFG-WO-2025-00001",
@@ -923,6 +924,9 @@ def batch_assign_work_orders(assignments_data):
     Returns:
         dict: 批量操作结果
     """
+    # 从args中获取assignments_data
+    assignments_data = args.get('assignments_data')
+    
     if isinstance(assignments_data, str):
         assignments_data = json.loads(assignments_data)
     
@@ -954,20 +958,54 @@ def batch_assign_work_orders(assignments_data):
                 })
                 continue
             
-            # 调用单个分配方法
+            # 将员工ID转换为用户邮箱
+            try:
+                user_emails = convert_employee_to_user_id(assign_to)
+                if not user_emails:
+                    failed_assignments.append({
+                        'index': i + 1,
+                        'work_order_name': work_order_name,
+                        'error': f'无法找到员工 {assign_to} 对应的用户邮箱'
+                    })
+                    continue
+            except Exception as e:
+                failed_assignments.append({
+                    'index': i + 1,
+                    'work_order_name': work_order_name,
+                    'error': f'员工ID转换失败: {str(e)}'
+                })
+                continue
+            
+            # 调用单个分配方法，使用转换后的邮箱
             result = assign_work_order(
                 work_order_name=work_order_name,
-                assign_to=assign_to,
+                assign_to=user_emails,
                 description=assignment_data.get('description'),
                 priority=assignment_data.get('priority', 'Medium'),
                 date=assignment_data.get('date')
             )
             
             if result.get('status') == 'success':
+                # 分配成功后，尝试提交工单
+                submit_result = None
+                try:
+                    work_order_doc = frappe.get_doc('Work Order', work_order_name)
+                    if work_order_doc.docstatus == 0:  # 只有草稿状态才提交
+                        work_order_doc.submit()
+                        submit_result = 'success'
+                    else:
+                        submit_result = f'工单状态为 {work_order_doc.docstatus}，无需提交'
+                except Exception as submit_error:
+                    submit_result = f'submit失败: {str(submit_error)}'
+                    frappe.log_error(f"工单 {work_order_name} 提交失败: {str(submit_error)}", "Work Order Submit Error")
+                
                 successful_assignments.append({
                     'index': i + 1,
                     'work_order_name': work_order_name,
-                    'assigned_to': assign_to if isinstance(assign_to, list) else [assign_to]
+                    'original_employee_id': assign_to,
+                    'converted_user_emails': user_emails,
+                    'assigned_to': user_emails,
+                    'submit_result': submit_result
                 })
             else:
                 failed_assignments.append({
@@ -976,12 +1014,18 @@ def batch_assign_work_orders(assignments_data):
                     'error': result.get('message')
                 })
         
+        # 统计提交结果
+        submit_success_count = sum(1 for item in successful_assignments if item.get('submit_result') == 'success')
+        submit_failed_count = len(successful_assignments) - submit_success_count
+        
         return {
             'status': 'success' if successful_assignments else 'error',
-            'message': f'批量分配完成: 成功 {len(successful_assignments)} 个，失败 {len(failed_assignments)} 个',
+            'message': f'批量分配完成: 成功 {len(successful_assignments)} 个，失败 {len(failed_assignments)} 个。提交成功 {submit_success_count} 个，提交失败 {submit_failed_count} 个',
             'total_count': len(assignments_data),
             'successful_count': len(successful_assignments),
             'failed_count': len(failed_assignments),
+            'submit_success_count': submit_success_count,
+            'submit_failed_count': submit_failed_count,
             'successful_assignments': successful_assignments,
             'failed_assignments': failed_assignments
         }
