@@ -140,8 +140,7 @@ def _create_work_orders_without_transaction(work_orders_data):
         
         # 设置自定义字段
         custom_fields = [
-            'custom_work_oder_type', 'custom_assigned_employee', 
-            'custom_assigned_employee_name', 'custom_pattern_name'
+            'custom_work_oder_type', 'custom_style_name', 'custom_style_code'
         ]
         
         for field in custom_fields:
@@ -344,9 +343,8 @@ def test_batch_save_work_orders():
             'transfer_material_against': 'Work Order',
             'use_multi_level_bom': 1,
             'wip_warehouse': '在制品 - D',
-            'custom_assigned_employee': 'HR-EMP-00001',
-            'custom_assigned_employee_name': '林',
-            'custom_pattern_name': 'SM-0023-1',
+            'custom_style_name': 'SM-0023',
+            'custom_style_code': 'STYLE-0023',
             # 分配相关字段 - 使用员工ID
             'assign_to': assign_to_value,
             'assignment_description': '批量测试工单1 - 请及时处理（使用员工ID）',
@@ -368,9 +366,8 @@ def test_batch_save_work_orders():
             'transfer_material_against': 'Work Order',
             'use_multi_level_bom': 1,
             'wip_warehouse': '在制品 - D',
-            'custom_assigned_employee': 'HR-EMP-00001',
-            'custom_assigned_employee_name': '林',
-            'custom_pattern_name': 'SM-0024-2',
+            'custom_style_name': 'SM-0024',
+            'custom_style_code': 'STYLE-0024',
             # 分配相关字段 - 使用员工ID
             'assign_to': assign_to_value,
             'assignment_description': '批量测试工单2 - 中等优先级（使用员工ID）',
@@ -392,9 +389,8 @@ def test_batch_save_work_orders():
             'transfer_material_against': 'Work Order',
             'use_multi_level_bom': 1,
             'wip_warehouse': '在制品 - D',
-            'custom_assigned_employee': 'HR-EMP-00001',
-            'custom_assigned_employee_name': '林',
-            'custom_pattern_name': 'SM-0025-3'
+            'custom_style_name': 'SM-0025',
+            'custom_style_code': 'STYLE-0025'
             # 这个工单没有分配信息，测试混合场景
         }
     ]
@@ -554,14 +550,11 @@ def save_work_order(**kwargs):
         if work_order_data.get('custom_work_oder_type'):
             work_order.custom_work_oder_type = work_order_data.get('custom_work_oder_type')
             
-        if work_order_data.get('custom_assigned_employee'):
-            work_order.custom_assigned_employee = work_order_data.get('custom_assigned_employee')
+        if work_order_data.get('custom_style_name'):
+            work_order.custom_style_name = work_order_data.get('custom_style_name')
             
-        if work_order_data.get('custom_assigned_employee_name'):
-            work_order.custom_assigned_employee_name = work_order_data.get('custom_assigned_employee_name')
-            
-        if work_order_data.get('custom_pattern_name'):
-            work_order.custom_pattern_name = work_order_data.get('custom_pattern_name')
+        if work_order_data.get('custom_style_code'):
+            work_order.custom_style_code = work_order_data.get('custom_style_code')
         
         # 设置所需物料
         if work_order_data.get('required_items'):
@@ -619,9 +612,8 @@ def test_save_work_order():
         'transfer_material_against': 'Work Order',
         'use_multi_level_bom': 1,
         'wip_warehouse': '在制品 - D',
-        'custom_assigned_employee': 'HR-EMP-00001',
-        'custom_assigned_employee_name': '林',
-        'custom_pattern_name': 'SM-0023'
+        'custom_style_name': 'SM-0023',
+        'custom_style_code': 'STYLE-0023'
     }
     
     return save_work_order(**test_data)
@@ -662,6 +654,227 @@ def get_work_order(work_order_name):
         return {
             'status': 'error',
             'message': f'获取工单时出错: {str(e)}'
+        }
+
+
+@frappe.whitelist()
+def get_work_order_list(page=1, page_size=20, filters=None, order_by=None, fields=None):
+    """
+    获取工单列表的白名单API方法（支持分页和子表信息）
+    
+    Args:
+        page: 页码，默认为1
+        page_size: 每页数量，默认为20
+        filters: 过滤条件，可以是字符串或字典
+        order_by: 排序字段，默认为creation desc
+        fields: 要获取的字段列表，如果为None则获取所有字段
+        
+    Returns:
+        dict: 包含工单列表和分页信息的字典
+    """
+    try:
+        # 参数处理
+        page = int(page) if page else 1
+        page_size = int(page_size) if page_size else 20
+        
+        # 处理filters参数
+        if isinstance(filters, str):
+            try:
+                filters = json.loads(filters)
+            except (json.JSONDecodeError, TypeError):
+                filters = {}
+        elif filters is None:
+            filters = {}
+        
+        # 处理fields参数
+        if isinstance(fields, str):
+            try:
+                fields = json.loads(fields)
+            except (json.JSONDecodeError, TypeError):
+                fields = None
+        
+        # 获取Work Order文档的所有字段
+        work_order_meta = frappe.get_meta('Work Order')
+        available_fields = [field.fieldname for field in work_order_meta.fields]
+        
+        # 默认字段列表（只包含确定存在的基础字段）
+        default_fields = [
+            'name', 'production_item', 'item_name', 'qty', 'company', 
+            'bom_no', 'status', 'docstatus', 'description', 'stock_uom',
+            'expected_delivery_date', 'planned_start_date', 'planned_end_date',
+            'actual_start_date', 'actual_end_date', 'fg_warehouse', 'wip_warehouse',
+            'transfer_material_against', 'use_multi_level_bom', 'sales_order',
+            'creation', 'modified', 'owner', 'modified_by'
+        ]
+        
+        # 检查自定义字段是否存在，如果存在则添加到默认字段中
+        custom_fields = [
+            'custom_work_oder_type', 'custom_style_name', 'custom_style_code'
+        ]
+        
+        for custom_field in custom_fields:
+            if custom_field in available_fields:
+                default_fields.append(custom_field)
+        
+        # 如果用户没有指定字段，使用默认字段
+        if fields is None:
+            fields = default_fields
+        else:
+            # 验证用户指定的字段是否存在
+            valid_fields = []
+            for field in fields:
+                if field in available_fields:
+                    valid_fields.append(field)
+                else:
+                    frappe.log_error(f"字段 {field} 在Work Order中不存在", "Work Order List Field Error")
+            
+            if not valid_fields:
+                # 如果所有字段都无效，使用默认字段
+                fields = default_fields
+            else:
+                fields = valid_fields
+        
+        # 默认排序
+        if not order_by:
+            order_by = 'creation desc'
+        
+        # 计算偏移量
+        offset = (page - 1) * page_size
+        
+        # 获取工单列表
+        work_orders = frappe.get_all(
+            'Work Order',
+            filters=filters,
+            fields=fields,
+            order_by=order_by,
+            limit=page_size,
+            limit_start=offset
+        )
+        
+        # 获取总数
+        total_count = frappe.db.count('Work Order', filters=filters)
+        
+        # 获取每个工单的详细信息（包括子表）
+        detailed_work_orders = []
+        for work_order in work_orders:
+            try:
+                # 获取完整的工单文档（包含子表）
+                work_order_doc = frappe.get_doc('Work Order', work_order.name)
+                work_order_dict = work_order_doc.as_dict()
+                
+                # 获取子表信息
+                sub_tables = {}
+                
+                # 获取所需物料子表
+                if hasattr(work_order_doc, 'required_items') and work_order_doc.required_items:
+                    sub_tables['required_items'] = []
+                    for item in work_order_doc.required_items:
+                        sub_tables['required_items'].append(item.as_dict())
+                
+                # 获取操作子表
+                if hasattr(work_order_doc, 'operations') and work_order_doc.operations:
+                    sub_tables['operations'] = []
+                    for operation in work_order_doc.operations:
+                        sub_tables['operations'].append(operation.as_dict())
+                
+                # 获取物料消耗子表
+                if hasattr(work_order_doc, 'material_consumption') and work_order_doc.material_consumption:
+                    sub_tables['material_consumption'] = []
+                    for consumption in work_order_doc.material_consumption:
+                        sub_tables['material_consumption'].append(consumption.as_dict())
+                
+                # 获取物料转移子表
+                if hasattr(work_order_doc, 'material_transfer') and work_order_doc.material_transfer:
+                    sub_tables['material_transfer'] = []
+                    for transfer in work_order_doc.material_transfer:
+                        sub_tables['material_transfer'].append(transfer.as_dict())
+                
+                # 获取分配信息
+                try:
+                    from frappe.desk.form import assign_to as frappe_assign_to
+                    assignments = frappe_assign_to.get({
+                        'doctype': 'Work Order',
+                        'name': work_order.name
+                    })
+                    sub_tables['assignments'] = assignments
+                except Exception as assignment_error:
+                    sub_tables['assignments'] = []
+                    frappe.log_error(f"获取工单 {work_order.name} 分配信息失败: {str(assignment_error)}")
+                
+                # 合并主表和子表信息
+                work_order_dict['sub_tables'] = sub_tables
+                detailed_work_orders.append(work_order_dict)
+                
+            except Exception as detail_error:
+                # 如果获取详细信息失败，至少返回基本信息
+                frappe.log_error(f"获取工单 {work_order.name} 详细信息失败: {str(detail_error)}")
+                work_order['sub_tables'] = {}
+                detailed_work_orders.append(work_order)
+        
+        # 计算分页信息
+        total_pages = (total_count + page_size - 1) // page_size
+        has_next = page < total_pages
+        has_prev = page > 1
+        
+        return {
+            'status': 'success',
+            'message': f'成功获取工单列表，共 {total_count} 条记录',
+            'data': {
+                'work_orders': detailed_work_orders,
+                'pagination': {
+                    'current_page': page,
+                    'page_size': page_size,
+                    'total_count': total_count,
+                    'total_pages': total_pages,
+                    'has_next': has_next,
+                    'has_prev': has_prev
+                },
+                'filters_applied': filters,
+                'order_by': order_by,
+                'fields_used': fields,
+                'available_fields': available_fields
+            }
+        }
+        
+    except Exception as e:
+        frappe.log_error(f"获取工单列表时出错: {str(e)}", "Work Order List Get Error")
+        return {
+            'status': 'error',
+            'message': f'获取工单列表时出错: {str(e)}'
+        }
+
+
+@frappe.whitelist()
+def test_get_work_order_list():
+    """
+    测试获取工单列表功能的函数
+    """
+    try:
+        # 测试基本分页
+        result1 = get_work_order_list(page=1, page_size=5)
+        
+        # 测试带过滤条件
+        filters = {'status': 'Draft', 'docstatus': 0}
+        result2 = get_work_order_list(page=1, page_size=3, filters=filters)
+        
+        # 测试自定义字段
+        fields = ['name', 'production_item', 'qty', 'status', 'custom_work_oder_type']
+        result3 = get_work_order_list(page=1, page_size=2, fields=fields)
+        
+        return {
+            'status': 'success',
+            'message': '工单列表获取测试完成',
+            'test_results': {
+                'basic_pagination': result1,
+                'with_filters': result2,
+                'with_custom_fields': result3
+            }
+        }
+        
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'测试工单列表获取功能时出错: {str(e)}'
         }
 
 
@@ -1100,9 +1313,8 @@ curl -X POST "http://your-site-url/api/method/rongguan_erp.utils.api.work_order.
       "transfer_material_against": "Work Order",
       "use_multi_level_bom": 1,
       "wip_warehouse": "在制品 - D",
-      "custom_assigned_employee": "HR-EMP-00001",
-      "custom_assigned_employee_name": "林",
-      "custom_pattern_name": "SM-0023-1",
+      "custom_style_name": "SM-0023",
+      "custom_style_code": "STYLE-0023",
       "assign_to": "administrator@example.com",
       "assignment_description": "API测试工单1 - 请及时处理",
       "assignment_priority": "High"
@@ -1123,9 +1335,8 @@ curl -X POST "http://your-site-url/api/method/rongguan_erp.utils.api.work_order.
       "transfer_material_against": "Work Order",
       "use_multi_level_bom": 1,
       "wip_warehouse": "在制品 - D",
-      "custom_assigned_employee": "HR-EMP-00001",
-      "custom_assigned_employee_name": "林",
-      "custom_pattern_name": "SM-0024-2",
+      "custom_style_name": "SM-0024",
+      "custom_style_code": "STYLE-0024",
       "assign_to": ["administrator@example.com", "user2@example.com"],
       "assignment_description": "API测试工单2 - 分配给多个用户",
       "assignment_priority": "Medium"
@@ -1146,9 +1357,8 @@ curl -X POST "http://your-site-url/api/method/rongguan_erp.utils.api.work_order.
       "transfer_material_against": "Work Order",
       "use_multi_level_bom": 1,
       "wip_warehouse": "在制品 - D",
-      "custom_assigned_employee": "HR-EMP-00001",
-      "custom_assigned_employee_name": "林",
-      "custom_pattern_name": "SM-0025-3"
+      "custom_style_name": "SM-0025",
+      "custom_style_code": "STYLE-0025"
     }
   ]
 }'
