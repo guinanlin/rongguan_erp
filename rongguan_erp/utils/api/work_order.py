@@ -660,7 +660,7 @@ def get_work_order(work_order_name):
 @frappe.whitelist()
 def get_work_order_list(page=1, page_size=20, filters=None, order_by=None, fields=None):
     """
-    获取工单列表的白名单API方法（支持分页和子表信息）
+    获取工单列表的白名单API方法（支持分页、子表信息和Job Card明细）
     
     Args:
         page: 页码，默认为1
@@ -670,7 +670,13 @@ def get_work_order_list(page=1, page_size=20, filters=None, order_by=None, field
         fields: 要获取的字段列表，如果为None则获取所有字段
         
     Returns:
-        dict: 包含工单列表和分页信息的字典
+        dict: 包含工单列表和分页信息的字典，每个工单包含以下子表信息：
+        - required_items: 所需物料
+        - operations: 操作
+        - material_consumption: 物料消耗
+        - material_transfer: 物料转移
+        - assignments: 分配信息
+        - job_cards: Job Card明细（包含所有子表信息）
     """
     try:
         # 参数处理
@@ -801,6 +807,74 @@ def get_work_order_list(page=1, page_size=20, filters=None, order_by=None, field
                     sub_tables['assignments'] = []
                     frappe.log_error(f"获取工单 {work_order.name} 分配信息失败: {str(assignment_error)}")
                 
+                # 获取Job Card明细
+                try:
+                    job_cards = frappe.get_all(
+                        'Job Card',
+                        filters={'work_order': work_order.name},
+                        fields=['name', 'operation', 'workstation', 'status', 'for_quantity', 
+                               'total_completed_qty', 'actual_start_date', 'actual_end_date',
+                               'expected_start_date', 'expected_end_date', 'time_required',
+                               'total_time_in_mins', 'posting_date', 'remarks', 'docstatus',
+                               'creation', 'modified', 'owner', 'modified_by']
+                    )
+                    
+                    # 获取每个Job Card的详细信息（包括子表）
+                    detailed_job_cards = []
+                    for job_card in job_cards:
+                        try:
+                            job_card_doc = frappe.get_doc('Job Card', job_card.name)
+                            job_card_dict = job_card_doc.as_dict()
+                            
+                            # 获取Job Card的子表信息
+                            job_card_sub_tables = {}
+                            
+                            # 获取Job Card Items子表
+                            if hasattr(job_card_doc, 'items') and job_card_doc.items:
+                                job_card_sub_tables['items'] = []
+                                for item in job_card_doc.items:
+                                    job_card_sub_tables['items'].append(item.as_dict())
+                            
+                            # 获取Job Card Operations子表
+                            if hasattr(job_card_doc, 'sub_operations') and job_card_doc.sub_operations:
+                                job_card_sub_tables['sub_operations'] = []
+                                for operation in job_card_doc.sub_operations:
+                                    job_card_sub_tables['sub_operations'].append(operation.as_dict())
+                            
+                            # 获取Job Card Time Logs子表
+                            if hasattr(job_card_doc, 'time_logs') and job_card_doc.time_logs:
+                                job_card_sub_tables['time_logs'] = []
+                                for time_log in job_card_doc.time_logs:
+                                    job_card_sub_tables['time_logs'].append(time_log.as_dict())
+                            
+                            # 获取Job Card Scheduled Time Logs子表
+                            if hasattr(job_card_doc, 'scheduled_time_logs') and job_card_doc.scheduled_time_logs:
+                                job_card_sub_tables['scheduled_time_logs'] = []
+                                for scheduled_log in job_card_doc.scheduled_time_logs:
+                                    job_card_sub_tables['scheduled_time_logs'].append(scheduled_log.as_dict())
+                            
+                            # 获取Job Card Scrap Items子表
+                            if hasattr(job_card_doc, 'scrap_items') and job_card_doc.scrap_items:
+                                job_card_sub_tables['scrap_items'] = []
+                                for scrap_item in job_card_doc.scrap_items:
+                                    job_card_sub_tables['scrap_items'].append(scrap_item.as_dict())
+                            
+                            # 合并Job Card主表和子表信息
+                            job_card_dict['sub_tables'] = job_card_sub_tables
+                            detailed_job_cards.append(job_card_dict)
+                            
+                        except Exception as job_card_detail_error:
+                            # 如果获取Job Card详细信息失败，至少返回基本信息
+                            frappe.log_error(f"获取Job Card {job_card.name} 详细信息失败: {str(job_card_detail_error)}")
+                            job_card['sub_tables'] = {}
+                            detailed_job_cards.append(job_card)
+                    
+                    sub_tables['job_cards'] = detailed_job_cards
+                    
+                except Exception as job_card_error:
+                    sub_tables['job_cards'] = []
+                    frappe.log_error(f"获取工单 {work_order.name} Job Card信息失败: {str(job_card_error)}")
+                
                 # 合并主表和子表信息
                 work_order_dict['sub_tables'] = sub_tables
                 detailed_work_orders.append(work_order_dict)
@@ -847,7 +921,7 @@ def get_work_order_list(page=1, page_size=20, filters=None, order_by=None, field
 @frappe.whitelist()
 def test_get_work_order_list():
     """
-    测试获取工单列表功能的函数
+    测试获取工单列表功能的函数（包含Job Card信息）
     """
     try:
         # 测试基本分页
@@ -861,13 +935,33 @@ def test_get_work_order_list():
         fields = ['name', 'production_item', 'qty', 'status', 'custom_work_oder_type']
         result3 = get_work_order_list(page=1, page_size=2, fields=fields)
         
+        # 测试包含Job Card信息的工单
+        # 查找有Job Card的工单
+        job_card_work_orders = frappe.get_all(
+            'Job Card',
+            fields=['work_order'],
+            limit=3
+        )
+        
+        if job_card_work_orders:
+            work_order_names = [jc.work_order for jc in job_card_work_orders]
+            filters_with_job_cards = {'name': ['in', work_order_names]}
+            result4 = get_work_order_list(page=1, page_size=len(work_order_names), filters=filters_with_job_cards)
+        else:
+            result4 = {'message': '没有找到包含Job Card的工单'}
+        
         return {
             'status': 'success',
-            'message': '工单列表获取测试完成',
+            'message': '工单列表获取测试完成（包含Job Card信息）',
             'test_results': {
                 'basic_pagination': result1,
                 'with_filters': result2,
-                'with_custom_fields': result3
+                'with_custom_fields': result3,
+                'with_job_cards': result4
+            },
+            'job_card_info': {
+                'total_job_cards': frappe.db.count('Job Card'),
+                'work_orders_with_job_cards': len(set([jc.work_order for jc in job_card_work_orders])) if job_card_work_orders else 0
             }
         }
         
@@ -1118,6 +1212,121 @@ def get_work_order_assignments(work_order_name):
 
 
 @frappe.whitelist()
+def get_work_order_job_cards(work_order_name):
+    """
+    获取工单对应的Job Card明细信息的白名单API方法
+    
+    Args:
+        work_order_name: 工单名称
+        
+    Returns:
+        dict: Job Card信息
+    """
+    try:
+        if not work_order_name:
+            return {
+                'status': 'error',
+                'message': '工单名称不能为空'
+            }
+        
+        # 检查工单是否存在
+        if not frappe.db.exists('Work Order', work_order_name):
+            return {
+                'status': 'error',
+                'message': f'工单 {work_order_name} 不存在'
+            }
+        
+        # 获取Job Card列表
+        job_cards = frappe.get_all(
+            'Job Card',
+            filters={'work_order': work_order_name},
+            fields=['name', 'operation', 'workstation', 'status', 'for_quantity', 
+                   'total_completed_qty', 'actual_start_date', 'actual_end_date',
+                   'expected_start_date', 'expected_end_date', 'time_required',
+                   'total_time_in_mins', 'posting_date', 'remarks', 'docstatus',
+                   'creation', 'modified', 'owner', 'modified_by']
+        )
+        
+        # 获取每个Job Card的详细信息（包括子表）
+        detailed_job_cards = []
+        for job_card in job_cards:
+            try:
+                job_card_doc = frappe.get_doc('Job Card', job_card.name)
+                job_card_dict = job_card_doc.as_dict()
+                
+                # 获取Job Card的子表信息
+                job_card_sub_tables = {}
+                
+                # 获取Job Card Items子表
+                if hasattr(job_card_doc, 'items') and job_card_doc.items:
+                    job_card_sub_tables['items'] = []
+                    for item in job_card_doc.items:
+                        job_card_sub_tables['items'].append(item.as_dict())
+                
+                # 获取Job Card Operations子表
+                if hasattr(job_card_doc, 'sub_operations') and job_card_doc.sub_operations:
+                    job_card_sub_tables['sub_operations'] = []
+                    for operation in job_card_doc.sub_operations:
+                        job_card_sub_tables['sub_operations'].append(operation.as_dict())
+                
+                # 获取Job Card Time Logs子表
+                if hasattr(job_card_doc, 'time_logs') and job_card_doc.time_logs:
+                    job_card_sub_tables['time_logs'] = []
+                    for time_log in job_card_doc.time_logs:
+                        job_card_sub_tables['time_logs'].append(time_log.as_dict())
+                
+                # 获取Job Card Scheduled Time Logs子表
+                if hasattr(job_card_doc, 'scheduled_time_logs') and job_card_doc.scheduled_time_logs:
+                    job_card_sub_tables['scheduled_time_logs'] = []
+                    for scheduled_log in job_card_doc.scheduled_time_logs:
+                        job_card_sub_tables['scheduled_time_logs'].append(scheduled_log.as_dict())
+                
+                # 获取Job Card Scrap Items子表
+                if hasattr(job_card_doc, 'scrap_items') and job_card_doc.scrap_items:
+                    job_card_sub_tables['scrap_items'] = []
+                    for scrap_item in job_card_doc.scrap_items:
+                        job_card_sub_tables['scrap_items'].append(scrap_item.as_dict())
+                
+                # 合并Job Card主表和子表信息
+                job_card_dict['sub_tables'] = job_card_sub_tables
+                detailed_job_cards.append(job_card_dict)
+                
+            except Exception as job_card_detail_error:
+                # 如果获取Job Card详细信息失败，至少返回基本信息
+                frappe.log_error(f"获取Job Card {job_card.name} 详细信息失败: {str(job_card_detail_error)}")
+                job_card['sub_tables'] = {}
+                detailed_job_cards.append(job_card)
+        
+        # 统计各状态的数量
+        status_counts = {}
+        for job_card in detailed_job_cards:
+            status = job_card.get('status', 'Unknown')
+            status_counts[status] = status_counts.get(status, 0) + 1
+        
+        result = {
+            'status': 'success',
+            'work_order_name': work_order_name,
+            'job_cards': detailed_job_cards,
+            'total_job_cards': len(detailed_job_cards),
+            'summary': {
+                'total_quantity': sum(jc.get('for_quantity', 0) for jc in detailed_job_cards),
+                'total_completed_qty': sum(jc.get('total_completed_qty', 0) for jc in detailed_job_cards),
+                'total_time_in_mins': sum(jc.get('total_time_in_mins', 0) for jc in detailed_job_cards),
+                'status_counts': status_counts
+            }
+        }
+        
+        return result
+        
+    except Exception as e:
+        frappe.log_error(f"获取工单Job Card时出错: {str(e)}", "Work Order Job Card Get Error")
+        return {
+            'status': 'error',
+            'message': f'获取工单Job Card时出错: {str(e)}'
+        }
+
+
+@frappe.whitelist()
 def batch_assign_work_orders(**args):
     """
     批量分配工单的白名单API方法
@@ -1287,6 +1496,49 @@ def test_assign_work_order():
         'assignments_info': assignments_result
     }
 
+
+@frappe.whitelist()
+def test_get_work_order_job_cards():
+    """
+    测试获取工单Job Card信息的函数
+    """
+    try:
+        # 查找有Job Card的工单
+        job_card_work_orders = frappe.get_all(
+            'Job Card',
+            fields=['work_order'],
+            limit=1
+        )
+        
+        if not job_card_work_orders:
+            return {
+                'status': 'info',
+                'message': '没有找到包含Job Card的工单，无法进行测试'
+            }
+        
+        work_order_name = job_card_work_orders[0].work_order
+        
+        # 测试获取Job Card信息
+        job_cards_result = get_work_order_job_cards(work_order_name)
+        
+        return {
+            'status': 'success',
+            'message': 'Job Card信息获取测试完成',
+            'test_work_order': work_order_name,
+            'job_cards_result': job_cards_result,
+            'system_info': {
+                'total_job_cards': frappe.db.count('Job Card'),
+                'total_work_orders': frappe.db.count('Work Order'),
+                'work_orders_with_job_cards': frappe.db.count('Job Card', filters={})
+            }
+        }
+        
+    except Exception as e:
+        return {
+            'status': 'error',
+            'message': f'测试Job Card功能时出错: {str(e)}'
+        }
+
 """
 === CURL 测试示例 ===
 
@@ -1421,4 +1673,58 @@ curl -X POST "http://site1.local:8000/api/method/rongguan_erp.utils.api.work_ord
     }
   }
 }
+
+7. Job Card相关API说明：
+
+7.1 获取工单Job Card明细：
+GET /api/method/rongguan_erp.utils.api.work_order.get_work_order_job_cards
+参数: work_order_name (工单名称)
+
+响应格式：
+{
+  "message": {
+    "status": "success",
+    "work_order_name": "MFG-WO-2025-00001",
+    "job_cards": [
+      {
+        "name": "PO-JOB-2025-00001",
+        "operation": "Cutting",
+        "workstation": "Cutting Station",
+        "status": "Work In Progress",
+        "for_quantity": 10,
+        "total_completed_qty": 5,
+        "sub_tables": {
+          "items": [...],           // Job Card Items
+          "sub_operations": [...],  // Job Card Operations
+          "time_logs": [...],       // Job Card Time Logs
+          "scheduled_time_logs": [...], // Scheduled Time Logs
+          "scrap_items": [...]      // Scrap Items
+        }
+      }
+    ],
+    "total_job_cards": 1,
+    "summary": {
+      "total_quantity": 10,
+      "total_completed_qty": 5,
+      "total_time_in_mins": 120,
+      "status_counts": {
+        "Work In Progress": 1
+      }
+    }
+  }
+}
+
+7.2 工单列表中的Job Card信息：
+在get_work_order_list的响应中，每个工单的sub_tables字段现在包含job_cards数组，
+包含该工单的所有Job Card明细信息。
+
+7.3 Job Card子表字段说明：
+- items: Job Card物料明细
+- sub_operations: Job Card子操作
+- time_logs: 时间记录
+- scheduled_time_logs: 计划时间记录
+- scrap_items: 废料项目
+
+8. 测试Job Card功能：
+bench execute rongguan_erp.utils.api.work_order.test_get_work_order_job_cards
 """
