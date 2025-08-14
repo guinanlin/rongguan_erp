@@ -1,7 +1,8 @@
 import frappe
 from frappe import _
-from frappe.utils import nowdate, get_datetime
+from frappe.utils import nowdate, get_datetime, flt
 import json
+from erpnext.manufacturing.doctype.work_order.work_order import make_stock_entry
 
 
 def convert_employee_to_user_id(employee_input):
@@ -1545,6 +1546,84 @@ def test_get_work_order_job_cards():
         return {
             'status': 'error',
             'message': f'测试Job Card功能时出错: {str(e)}'
+        }
+
+
+@frappe.whitelist()
+def complete_work_order(work_order_id: str, qty: float):
+    """
+    一键完工 Work Order
+    :param work_order_id: 工单 ID，比如 "MFG-WO-2025-00130"
+    :param qty: 要完工的数量
+    :return: 提交后的 Stock Entry JSON
+    """
+    try:
+        qty = flt(qty)
+        
+        # 验证工单是否存在
+        if not frappe.db.exists('Work Order', work_order_id):
+            return {
+                'status': 'error',
+                'message': f'工单 {work_order_id} 不存在'
+            }
+        
+        # 获取工单文档
+        work_order = frappe.get_doc('Work Order', work_order_id)
+        
+        # 验证工单状态
+        if work_order.docstatus != 1:
+            return {
+                'status': 'error',
+                'message': f'工单 {work_order_id} 未提交，无法完工'
+            }
+        
+        if work_order.status == 'Completed':
+            return {
+                'status': 'error',
+                'message': f'工单 {work_order_id} 已完成'
+            }
+
+        # 1. 调用 make_stock_entry 生成单据对象
+        try:
+            se_dict = make_stock_entry(work_order_id, "Manufacture", qty)
+            frappe.logger().info(f"make_stock_entry 返回: {type(se_dict)}")
+            
+            if not se_dict:
+                return {
+                    'status': 'error',
+                    'message': f'无法为工单 {work_order_id} 生成库存单据，make_stock_entry 返回 None'
+                }
+            
+            # 从字典创建文档对象
+            se_doc = frappe.get_doc(se_dict)
+            
+        except Exception as make_se_error:
+            frappe.logger().error(f"make_stock_entry 调用失败: {str(make_se_error)}")
+            return {
+                'status': 'error',
+                'message': f'生成库存单据失败: {str(make_se_error)}'
+            }
+
+        # 2. 保存单据
+        se_doc.insert(ignore_permissions=True)
+
+        # 3. 提交单据
+        se_doc.submit()
+
+        frappe.db.commit()
+
+        return {
+            'status': 'success',
+            'message': f'工单 {work_order_id} 完工成功',
+            'stock_entry': se_doc.as_dict()
+        }
+        
+    except Exception as e:
+        frappe.db.rollback()
+        frappe.log_error(f"完工工单 {work_order_id} 时出错: {str(e)}", "Work Order Complete Error")
+        return {
+            'status': 'error',
+            'message': f'完工工单时出错: {str(e)}'
         }
 
 """
