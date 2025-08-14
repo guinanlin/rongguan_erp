@@ -200,7 +200,7 @@
   {
    "fieldname": "production_item_tab",
    "fieldtype": "Tab Break",
-   "label": "\u751f\u4ea7\u6e05\u5355"
+   "label": "\u8ba2\u5355\u660e\u7ec6"
   },
   {
    "fieldname": "company",
@@ -298,7 +298,7 @@
   {
    "fieldname": "\u7269\u6599\u6e05\u5355_section",
    "fieldtype": "Section Break",
-   "label": "\u7269\u6599\u6e05\u5355"
+   "label": "\u8ba2\u5355\u660e\u7ec6"
   },
   {
    "fieldname": "bom_tab",
@@ -313,7 +313,7 @@
   {
    "fieldname": "\u9762\u6599\u8f85\u6599\u914d\u8272_tab",
    "fieldtype": "Tab Break",
-   "label": "\u9762\u6599\u8f85\u6599\u914d\u8272"
+   "label": "\u7269\u6599\u6e05\u5355"
   },
   {
    "fieldname": "table_mbev",
@@ -408,7 +408,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-07-08 21:24:09.589559",
+ "modified": "2025-08-12 19:00:32.893977",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "RG Production Orders",

@@ -702,6 +702,10 @@ def get_work_order_list(page=1, page_size=20, filters=None, order_by=None, field
         # 获取Work Order文档的所有字段
         work_order_meta = frappe.get_meta('Work Order')
         available_fields = [field.fieldname for field in work_order_meta.fields]
+
+        # 添加系统字段（这些字段存在于数据库中但不在元数据中）
+        system_fields = ['_assign', '_user_tags', '_comments', '_liked_by', '_seen']
+        available_fields.extend(system_fields)
         
         # 默认字段列表（只包含确定存在的基础字段）
         default_fields = [
@@ -710,7 +714,7 @@ def get_work_order_list(page=1, page_size=20, filters=None, order_by=None, field
             'expected_delivery_date', 'planned_start_date', 'planned_end_date',
             'actual_start_date', 'actual_end_date', 'fg_warehouse', 'wip_warehouse',
             'transfer_material_against', 'use_multi_level_bom', 'sales_order',
-            'creation', 'modified', 'owner', 'modified_by'
+            'creation', 'modified', 'owner', 'modified_by','_assign'
         ]
         
         # 检查自定义字段是否存在，如果存在则添加到默认字段中
@@ -767,6 +771,10 @@ def get_work_order_list(page=1, page_size=20, filters=None, order_by=None, field
                 # 获取完整的工单文档（包含子表）
                 work_order_doc = frappe.get_doc('Work Order', work_order.name)
                 work_order_dict = work_order_doc.as_dict()
+
+                # 确保 _assign 字段被正确包含
+                assign_value = frappe.db.get_value('Work Order', work_order.name, '_assign')
+                work_order_dict['_assign'] = assign_value if assign_value else None
                 
                 # 获取子表信息
                 sub_tables = {}
@@ -911,7 +919,7 @@ def get_work_order_list(page=1, page_size=20, filters=None, order_by=None, field
         }
         
     except Exception as e:
-        frappe.log_error(f"获取工单列表时出错: {str(e)}", "Work Order List Get Error")
+        frappe.log_error("获取工单列表时出错", "Work Order List Get Error")
         return {
             'status': 'error',
             'message': f'获取工单列表时出错: {str(e)}'
