@@ -45,20 +45,10 @@ def get_exploded_bom_items(**args):
         }
     """
     try:
-        # 打印传入的参数
-        print("=== get_exploded_bom_items 参数 ===")
-        print(f"接收到的args: {args}")
-        
         # 从args中获取参数
         bom_no = args.get('bom_no')
         qty = args.get('qty', 1)
         include_non_stock_items = args.get('include_non_stock_items', True)
-        
-        print(f"解析后的参数:")
-        print(f"  bom_no: {bom_no}")
-        print(f"  qty: {qty}")
-        print(f"  include_non_stock_items: {include_non_stock_items}")
-        print("=" * 40)
         
         # 参数验证
         if not bom_no:
@@ -100,9 +90,6 @@ def get_exploded_bom_items(**args):
         # 获取BOM对应的物料信息
         item_code = bom_doc.item
         item_doc = frappe.get_doc("Item", item_code)
-        
-        print(f"从BOM获取的公司: {company}")
-        print(f"BOM对应的物料: {item_code}")
         
         # 调用ERPNext的BOM展开方法获取物料明细
         from erpnext.manufacturing.doctype.bom.bom import get_bom_items_as_dict
@@ -189,18 +176,9 @@ def get_bom_structure_summary(**args):
         dict: BOM结构摘要
     """
     try:
-        # 打印传入的参数
-        print("=== get_bom_structure_summary 参数 ===")
-        print(f"接收到的args: {args}")
-        
         # 从args中获取参数
         item_code = args.get('item_code')
         qty = args.get('qty', 1)
-        
-        print(f"解析后的参数:")
-        print(f"  item_code: {item_code}")
-        print(f"  qty: {qty}")
-        print("=" * 40)
         
         if not item_code:
             return {"status": "error", "message": "物料编码不能为空"}
@@ -220,7 +198,6 @@ def get_bom_structure_summary(**args):
         
         # 从BOM获取公司信息
         company = bom_doc.company
-        print(f"从BOM获取的公司: {company}")
         
         # 获取BOM项目统计
         bom_items_count = frappe.db.count("BOM Item", {"parent": default_bom})
