@@ -522,7 +522,90 @@ def get_production_order_details(docname):
         
         doc_dict["rg_size_details"] = derived_rg_size_details
         
+        # 处理 rg_bom_detail_listing 子表数据（table_mbev）
+        if "table_mbev" in doc_dict and doc_dict["table_mbev"]:
+            # 将 table_mbev 重命名为更直观的字段名
+            doc_dict["rg_bom_detail_listing"] = doc_dict["table_mbev"]
+            # 同时保留原字段名以保持兼容性
+        else:
+            doc_dict["rg_bom_detail_listing"] = []
+        
         return doc_dict
     except Exception as e:
         frappe.log_error(f"获取生产订单 {docname} 详细信息时出错: {str(e)}")
         frappe.throw(f"获取生产订单详细信息失败: {str(e)}")
+
+@frappe.whitelist()
+def update_bom_detail_listing(docname, detail_listing_data):
+    """
+    更新生产制造通知单的物料明细清单子表
+    
+    参数:
+        docname (str): 生产制造通知单的文档名称
+        detail_listing_data (list): 物料明细清单数据列表
+        
+    返回:
+        dict: 更新结果
+    """
+    try:
+        if not docname:
+            frappe.throw("请提供有效的文档名称")
+            
+        if not detail_listing_data:
+            frappe.throw("请提供物料明细清单数据")
+        
+        # 读取父单
+        doc = frappe.get_doc("RG Production Orders", docname)
+        
+        # 清空原有物料明细清单
+        doc.table_mbev = []
+        
+        # 添加新的明细行
+        for item_data in detail_listing_data:
+            # 验证必要字段
+            if not item_data.get("item_code"):
+                frappe.throw("物料代码是必填字段")
+            
+            # 构建明细行数据
+            detail_row = {
+                "item_code": item_data.get("item_code"),
+                "item_description": item_data.get("item_description", ""),
+                "item_color": item_data.get("item_color", ""),
+                "qty_per_unit": item_data.get("qty_per_unit", 0),
+                "garment_color": item_data.get("garment_color", ""),
+                "shared": item_data.get("shared", 0),
+                "garment_qty": item_data.get("garment_qty", 0),
+                "uom": item_data.get("uom", ""),
+                "item_group": item_data.get("item_group", ""),
+                "rate": item_data.get("rate", 0),
+                "amount": item_data.get("amount", 0),
+                "required_qty": item_data.get("required_qty", 0),
+                "actual_qty": item_data.get("actual_qty", 0),
+                "projected_qty": item_data.get("projected_qty", 0),
+                "reserved_qty": item_data.get("reserved_qty", 0),
+                "ordered_qty": item_data.get("ordered_qty", 0),
+                "planned_qty": item_data.get("planned_qty", 0),
+                "purchase_planned_qty": item_data.get("purchase_planned_qty", 0),
+                "warehouse": item_data.get("warehouse", "")
+            }
+            
+            # 添加到子表
+            doc.append("table_mbev", detail_row)
+        
+        # 保存文档
+        doc.save()
+        
+        # 提交事务
+        frappe.db.commit()
+        
+        return {
+            "success": True,
+            "message": f"成功更新生产制造通知单 {docname} 的物料明细清单",
+            "updated_count": len(detail_listing_data)
+        }
+        
+    except Exception as e:
+        # 回滚事务
+        frappe.db.rollback()
+        frappe.log_error(f"更新物料明细清单时出错: {str(e)}")
+        frappe.throw(f"更新物料明细清单失败: {str(e)}")

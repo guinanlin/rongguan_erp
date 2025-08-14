@@ -1,0 +1,185 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-08-15 04:40:53.207385",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_dtas",
+  "item_code",
+  "item_description",
+  "item_color",
+  "qty_per_unit",
+  "garment_color",
+  "shared",
+  "garment_qty",
+  "uom",
+  "item_group",
+  "rate",
+  "amount",
+  "required_qty",
+  "actual_qty",
+  "projected_qty",
+  "reserved_qty",
+  "ordered_qty",
+  "planned_qty",
+  "purchase_planned_qty",
+  "warehouse"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_dtas",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "item_code",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
+   "label": "\u7269\u6599\u4ee3\u7801",
+   "options": "Item",
+   "reqd": 1
+  },
+  {
+   "fieldname": "item_description",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u7269\u6599\u63cf\u8ff0",
+   "read_only": 1
+  },
+  {
+   "fieldname": "item_color",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u7269\u6599\u989c\u8272",
+   "read_only": 1
+  },
+  {
+   "fieldname": "qty_per_unit",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "\u5355\u4ef6\u7528\u91cf",
+   "reqd": 1
+  },
+  {
+   "fieldname": "garment_color",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u6210\u8863\u989c\u8272"
+  },
+  {
+   "default": "0",
+   "fieldname": "shared",
+   "fieldtype": "Check",
+   "in_list_view": 1,
+   "label": "\u5171\u7528"
+  },
+  {
+   "fieldname": "garment_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "\u6210\u8863\u6570\u91cf",
+   "read_only": 1
+  },
+  {
+   "fieldname": "uom",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u5355\u4f4d",
+   "options": "UOM",
+   "read_only": 1
+  },
+  {
+   "fieldname": "item_group",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u7269\u6599\u7ec4",
+   "options": "Item Group",
+   "read_only": 1
+  },
+  {
+   "fieldname": "rate",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "\u5355\u4ef7"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "\u91d1\u989d",
+   "read_only": 1
+  },
+  {
+   "fieldname": "required_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "\u9700\u6c42\u6570\u91cf",
+   "read_only": 1
+  },
+  {
+   "fieldname": "actual_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "\u5b9e\u9645\u5e93\u5b58\u6570\u91cf",
+   "read_only": 1
+  },
+  {
+   "fieldname": "projected_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "\u9884\u8ba1\u53ef\u7528\u5e93\u5b58",
+   "read_only": 1
+  },
+  {
+   "fieldname": "reserved_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "\u5df2\u9884\u7559\u6570\u91cf",
+   "read_only": 1
+  },
+  {
+   "fieldname": "ordered_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "\u5df2\u8ba2\u8d2d\u5f85\u6536\u8d27\u6570\u91cf",
+   "read_only": 1
+  },
+  {
+   "fieldname": "planned_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "\u8ba1\u5212\u751f\u4ea7\u6570\u91cf",
+   "read_only": 1
+  },
+  {
+   "fieldname": "purchase_planned_qty",
+   "fieldtype": "Float",
+   "in_list_view": 1,
+   "label": "\u91c7\u8d2d\u8ba1\u5212\u6570\u91cf",
+   "read_only": 1
+  },
+  {
+   "fieldname": "warehouse",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u4ed3\u5e93",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-08-15 05:44:39.981076",
+ "modified_by": "Administrator",
+ "module": "Rongguan Erp",
+ "name": "RG BOM Detail Listing",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

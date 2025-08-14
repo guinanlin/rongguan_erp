@@ -318,7 +318,7 @@
   {
    "fieldname": "table_mbev",
    "fieldtype": "Table",
-   "options": "RG BOM Item"
+   "options": "RG BOM Detail Listing"
   },
   {
    "fieldname": "business_type",
@@ -408,7 +408,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-08-12 19:00:32.893977",
+ "modified": "2025-08-15 04:50:19.453359",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "RG Production Orders",

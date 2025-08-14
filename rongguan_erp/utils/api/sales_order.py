@@ -211,6 +211,15 @@ def save_sales_order(order_data=None, *args, **kwargs):
             try:
                 # Pass the processed items list to the mapping function
                 production_order_data = map_sales_order_to_production_order(so, order_data.get("items", [])) # Pass so and items list
+                
+                # 获取 custom_copy_from 字段并打印
+                custom_copy_from = order_data.get("custom_copy_from")
+                print(f"custom_copy_from:============== {custom_copy_from}")
+                
+                # 将 custom_copy_from 添加到生产订单数据中
+                if custom_copy_from:
+                    production_order_data["custom_copy_from"] = custom_copy_from
+                
                 production_order_result = save_to_rg_production_orders(production_order_data)
 
                 if production_order_result.get("error"):
@@ -325,6 +334,10 @@ def save_to_rg_production_orders(production_order_data):
         dict: 保存结果
     """
     try:
+        # 获取并打印 custom_copy_from 字段
+        custom_copy_from = production_order_data.get("custom_copy_from")
+        print(f"save_to_rg_production_orders - custom_copy_from:============== {custom_copy_from}")
+        
         # 检查颜色和尺码属性是否存在
         material_list = production_order_data.get("materialData", {}).get("materialList", [])
         for material in material_list:
@@ -342,6 +355,73 @@ def save_to_rg_production_orders(production_order_data):
         # 调用 saveRGProductionOrder 方法保存文档
         result = saveRGProductionOrder(full_production_order_data)
 
+        # 生成的生产订单的名称
+        production_order_name = result.get("name")
+        print(f"production_order_name:============== {production_order_name}")
+        
+        # 如果存在 custom_copy_from，则复制 rg_bom_detail_listing 子表数据
+        if custom_copy_from and production_order_name:
+            try:
+                print(f"开始复制 rg_bom_detail_listing 数据，从 {custom_copy_from} 到 {production_order_name}")
+                
+                # 根据 custom_copy_from 查找对应的生产制造通知单
+                source_production_orders = frappe.get_all(
+                    "RG Production Orders",
+                    filters={"order_number": custom_copy_from},
+                    fields=["name"]
+                )
+                
+                if source_production_orders:
+                    source_production_order_name = source_production_orders[0].name
+                    print(f"找到源生产制造通知单: {source_production_order_name}")
+                    
+                    # 读取源生产制造通知单的 rg_bom_detail_listing 子表数据
+                    source_doc = frappe.get_doc("RG Production Orders", source_production_order_name)
+                    source_detail_listing = []
+                    
+                    if source_doc.table_mbev:
+                        for detail_item in source_doc.table_mbev:
+                            detail_data = {
+                                "item_code": detail_item.item_code,
+                                "item_description": detail_item.item_description,
+                                "item_color": detail_item.item_color,
+                                "qty_per_unit": detail_item.qty_per_unit,
+                                "garment_color": detail_item.garment_color,
+                                "shared": detail_item.shared,
+                                "garment_qty": detail_item.garment_qty,
+                                "uom": detail_item.uom,
+                                "item_group": detail_item.item_group,
+                                "rate": detail_item.rate,
+                                "amount": detail_item.amount,
+                                "required_qty": detail_item.required_qty,
+                                "actual_qty": detail_item.actual_qty,
+                                "projected_qty": detail_item.projected_qty,
+                                "reserved_qty": detail_item.reserved_qty,
+                                "ordered_qty": detail_item.ordered_qty,
+                                "planned_qty": detail_item.planned_qty,
+                                "purchase_planned_qty": detail_item.purchase_planned_qty,
+                                "warehouse": detail_item.warehouse
+                            }
+                            source_detail_listing.append(detail_data)
+                    
+                    print(f"源生产制造通知单的 rg_bom_detail_listing 数据条数: {len(source_detail_listing)}")
+                    
+                    # 如果有数据，则更新到新的生产制造通知单
+                    if source_detail_listing:
+                        # 调用 update_bom_detail_listing 函数更新子表数据
+                        from rongguan_erp.rongguan_erp.doctype.rg_production_orders.rg_production_orders import update_bom_detail_listing
+                        update_result = update_bom_detail_listing(production_order_name, source_detail_listing)
+                        print(f"更新 rg_bom_detail_listing 结果: {update_result}")
+                    else:
+                        print("源生产制造通知单没有 rg_bom_detail_listing 数据")
+                else:
+                    print(f"未找到销售订单号为 {custom_copy_from} 的生产制造通知单")
+                    
+            except Exception as e:
+                print(f"复制 rg_bom_detail_listing 数据时出错: {str(e)}")
+                frappe.log_error(f"复制 rg_bom_detail_listing 数据时出错: {str(e)}")
+                # 不抛出异常，避免影响主流程
+        
         # 返回保存结果
         return {
             "data": {
