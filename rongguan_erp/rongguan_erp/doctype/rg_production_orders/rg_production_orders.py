@@ -421,6 +421,37 @@ def get_rg_production_orders(page=1, page_size=10):
             page_length=page_size
         )
         
+        # 为每个生产订单添加纸样单状态
+        for order in production_orders:
+            if order.get("pattern_number"):
+                try:
+                    # 根据纸样单号查找对应的纸样单（通过文档名称查找）
+                    paper_pattern_docs = frappe.get_all(
+                        "RG Paper Pattern",
+                        filters={"name": order.get("pattern_number")},
+                        fields=["name", "docstatus"],
+                        limit=1
+                    )
+                    
+                    if paper_pattern_docs:
+                        paper_pattern_doc = paper_pattern_docs[0]
+                        # 根据 docstatus 设置状态
+                        if paper_pattern_doc.docstatus == 0:
+                            order["paper_pattern_status"] = "草稿"
+                        elif paper_pattern_doc.docstatus == 1:
+                            order["paper_pattern_status"] = "已提交"
+                        elif paper_pattern_doc.docstatus == 2:
+                            order["paper_pattern_status"] = "已取消"
+                        else:
+                            order["paper_pattern_status"] = "未知状态"
+                    else:
+                        order["paper_pattern_status"] = ""
+                except Exception as e:
+                    frappe.log_error(f"获取纸样单 {order.get('pattern_number')} 状态时出错: {str(e)}")
+                    order["paper_pattern_status"] = ""
+            else:
+                order["paper_pattern_status"] = ""
+        
         # 获取总记录数用于分页计算
         total_count = frappe.db.count("RG Production Orders")
         
@@ -458,6 +489,36 @@ def get_production_order_details(docname):
         
         # 将文档转换为字典格式，以便返回
         doc_dict = doc.as_dict()
+        
+        # 获取纸样单状态（如果 pattern_number 有值）
+        if doc_dict.get("pattern_number"):
+            try:
+                # 根据纸样单号查找对应的纸样单（通过文档名称查找）
+                paper_pattern_docs = frappe.get_all(
+                    "RG Paper Pattern",
+                    filters={"name": doc_dict.get("pattern_number")},
+                    fields=["name", "docstatus"],
+                    limit=1
+                )
+                
+                if paper_pattern_docs:
+                    paper_pattern_doc = paper_pattern_docs[0]
+                    # 根据 docstatus 设置状态
+                    if paper_pattern_doc.docstatus == 0:
+                        doc_dict["paper_pattern_status"] = "草稿"
+                    elif paper_pattern_doc.docstatus == 1:
+                        doc_dict["paper_pattern_status"] = "已提交"
+                    elif paper_pattern_doc.docstatus == 2:
+                        doc_dict["paper_pattern_status"] = "已取消"
+                    else:
+                        doc_dict["paper_pattern_status"] = "未知状态"
+                else:
+                    doc_dict["paper_pattern_status"] = ""
+            except Exception as e:
+                frappe.log_error(f"获取纸样单 {doc_dict.get('pattern_number')} 状态时出错: {str(e)}")
+                doc_dict["paper_pattern_status"] = "获取状态失败"
+        else:
+            doc_dict["paper_pattern_status"] = ""
         
         # 处理 items 子表，添加颜色和尺码信息
         if "items" in doc_dict and doc_dict["items"]:

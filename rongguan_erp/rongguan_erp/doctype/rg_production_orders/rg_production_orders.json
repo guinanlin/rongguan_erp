@@ -63,6 +63,7 @@
   "operations",
   "\u9762\u6599\u8f85\u6599\u914d\u8272_tab",
   "table_mbev",
+  "paper_pattern_audit_status",
   "\u56fe\u793a_tab",
   "front_picture",
   "backend_picture",
@@ -145,7 +146,7 @@
   {
    "fieldname": "pattern_number",
    "fieldtype": "Data",
-   "label": "\u7eb8\u6837\u53f7"
+   "label": "\u7eb8\u6837\u5355\u53f7"
   },
   {
    "fieldname": "factory",
@@ -407,15 +408,20 @@
   {
    "fieldname": "custom_copy_from",
    "fieldtype": "Data",
-   "label": "Custom Copy From",
-   "unique": 1
+   "label": "Custom Copy From"
+  },
+  {
+   "default": "0",
+   "fieldname": "paper_pattern_audit_status",
+   "fieldtype": "Check",
+   "label": "Paper Pattern Audit Status"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-08-16 11:40:58.927945",
+ "modified": "2025-08-18 05:48:01.119415",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "RG Production Orders",
