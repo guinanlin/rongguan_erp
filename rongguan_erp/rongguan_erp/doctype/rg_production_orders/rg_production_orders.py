@@ -98,6 +98,7 @@ def saveRGProductionOrder(doc):
 			# "image": doc.get("image"), # JSON中未找到对应字段，忽略或需确认
 			"quantity": doc.get("quantity"), # 映射数量
 			# 暂时注释 rg_size 字段，避免链接验证错误
+			"custom_copy_from": doc.get("custom_copy_from"), # 映射 custom_copy_from 字段
 			"rg_size": doc.get("materialData", {}).get("selectedSizeChart", {}).get("name"), # 映射尺码类型名称 (根据结构猜测)
 			"rg_color": doc.get("materialData", {}).get("selectedColorChart", {}).get("name"), # 映射尺码类型名称 (根据结构猜测)
 			"工艺路线": doc.get("processLine"), # 映射工艺路线

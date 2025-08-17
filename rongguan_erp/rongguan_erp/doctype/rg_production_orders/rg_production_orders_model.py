@@ -30,6 +30,7 @@ def get_default_production_order_data(partial_data=None):
         "factoryId": "",
         "quantity": 0,
         "processLine": "",
+        "custom_copy_from": "",
         "displayImageData": {
             "front": {"file_url": ""},
             "back": {"file_url": ""},

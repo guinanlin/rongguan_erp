@@ -13,6 +13,7 @@
   "business_type",
   "order_type",
   "order_number",
+  "custom_copy_from",
   "departure_date",
   "column_break_uexd",
   "style_number",
@@ -402,13 +403,19 @@
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "custom_copy_from",
+   "fieldtype": "Data",
+   "label": "Custom Copy From",
+   "unique": 1
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-08-15 04:50:19.453359",
+ "modified": "2025-08-16 11:40:58.927945",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "RG Production Orders",
