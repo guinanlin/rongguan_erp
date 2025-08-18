@@ -164,6 +164,33 @@ def _create_work_orders_without_transaction(work_orders_data):
                     'include_item_in_manufacturing': item.get('include_item_in_manufacturing', 1)
                 })
         
+        # 设置操作工序
+        if work_order_data.get('operations'):
+            try:
+                operations_list = work_order_data.get('operations')
+                if isinstance(operations_list, list) and operations_list:
+                    for operation in operations_list:
+                        if isinstance(operation, dict) and operation.get('operation'):
+                            work_order.append('operations', {
+                                'operation': operation.get('operation'),
+                                'status': operation.get('status', 'Pending'),
+                                'time_in_mins': operation.get('time_in_mins', 0),
+                                'planned_operating_cost': operation.get('planned_operating_cost', 0),
+                                'sequence_id': operation.get('sequence_id', 1),
+                                'hour_rate': operation.get('hour_rate', 0),
+                                'batch_size': operation.get('batch_size', 0),
+                                'completed_qty': operation.get('completed_qty', 0),
+                                'process_loss_qty': operation.get('process_loss_qty', 0),
+                                'actual_operation_time': operation.get('actual_operation_time', 0),
+                                'actual_operating_cost': operation.get('actual_operating_cost', 0)
+                            })
+                        else:
+                            # 记录无效的operation数据，但不影响工单创建
+                            frappe.log_error(f"工单 {work_order.name} 的operation数据无效: {operation}", "Work Order Operations Error")
+            except Exception as operations_error:
+                # 如果operations处理出错，记录错误但不影响工单创建
+                frappe.log_error(f"工单 {work_order.name} 处理operations时出错: {str(operations_error)}", "Work Order Operations Error")
+        
         # 保存工单
         work_order.insert()
         
@@ -272,15 +299,35 @@ def _create_work_orders_without_transaction(work_orders_data):
 def batch_save_work_orders(work_orders_data):
     """
     批量保存生产工单的白名单API方法（事务处理）
-    支持在保存工单的同时分配给员工
+    支持在保存工单的同时分配给员工，并支持操作工序
     
     Args:
         work_orders_data: 工单数据列表，每个元素都是一个工单数据字典
-        可以包含以下分配相关字段：
-        - assign_to: 分配给的员工ID或用户ID（字符串或列表）
-        - assignment_description: 分配描述
-        - assignment_priority: 分配优先级 (Low, Medium, High)
-        - assignment_date: 分配完成日期
+        可以包含以下字段：
+        - 基本字段: production_item, qty, company, bom_no, stock_uom
+        - 可选字段: naming_series, description, item_name, expected_delivery_date, 
+                   planned_start_date, fg_warehouse, wip_warehouse, transfer_material_against,
+                   use_multi_level_bom, update_consumed_material_cost_in_project, sales_order
+        - 自定义字段: custom_work_oder_type, custom_style_name, custom_style_code
+        - 分配相关字段:
+          - assign_to: 分配给的员工ID或用户ID（字符串或列表）
+          - assignment_description: 分配描述
+          - assignment_priority: 分配优先级 (Low, Medium, High)
+          - assignment_date: 分配完成日期
+        - 子表字段:
+          - required_items: 所需物料列表
+          - operations: 操作工序列表，每个工序包含以下字段：
+            - operation: 工序名称
+            - status: 状态 (Pending, Work In Progress, Completed)
+            - time_in_mins: 计划时间（分钟）
+            - planned_operating_cost: 计划操作成本
+            - sequence_id: 序列ID
+            - hour_rate: 小时费率
+            - batch_size: 批次大小
+            - completed_qty: 完成数量
+            - process_loss_qty: 工艺损耗数量
+            - actual_operation_time: 实际操作时间
+            - actual_operating_cost: 实际操作成本
         
     Returns:
         dict: 包含操作结果的字典
@@ -315,7 +362,7 @@ def batch_save_work_orders(work_orders_data):
 @frappe.whitelist()
 def test_batch_save_work_orders():
     """
-    测试批量保存工单的函数（包含分配功能）
+    测试批量保存工单的函数（包含分配功能和operations）
     """
     # 获取一个测试用的员工ID
     test_employee = frappe.db.get_value('Employee', {'status': 'Active'}, ['name', 'user_id'], as_dict=True)
@@ -349,7 +396,36 @@ def test_batch_save_work_orders():
             # 分配相关字段 - 使用员工ID
             'assign_to': assign_to_value,
             'assignment_description': '批量测试工单1 - 请及时处理（使用员工ID）',
-            'assignment_priority': 'High'
+            'assignment_priority': 'High',
+            # 操作工序
+            'operations': [
+                {
+                    'operation': '裁剪',
+                    'status': 'Pending',
+                    'time_in_mins': 100,
+                    'planned_operating_cost': 0,
+                    'sequence_id': 1,
+                    'hour_rate': 0,
+                    'batch_size': 0,
+                    'completed_qty': 0,
+                    'process_loss_qty': 0,
+                    'actual_operation_time': 0,
+                    'actual_operating_cost': 0
+                },
+                {
+                    'operation': '缝制',
+                    'status': 'Pending',
+                    'time_in_mins': 150,
+                    'planned_operating_cost': 0,
+                    'sequence_id': 2,
+                    'hour_rate': 0,
+                    'batch_size': 0,
+                    'completed_qty': 0,
+                    'process_loss_qty': 0,
+                    'actual_operation_time': 0,
+                    'actual_operating_cost': 0
+                }
+            ]
         },
         {
             'bom_no': 'BOM-FG000354-012',
@@ -372,7 +448,49 @@ def test_batch_save_work_orders():
             # 分配相关字段 - 使用员工ID
             'assign_to': assign_to_value,
             'assignment_description': '批量测试工单2 - 中等优先级（使用员工ID）',
-            'assignment_priority': 'Medium'
+            'assignment_priority': 'Medium',
+            # 操作工序
+            'operations': [
+                {
+                    'operation': '裁剪',
+                    'status': 'Pending',
+                    'time_in_mins': 120,
+                    'planned_operating_cost': 0,
+                    'sequence_id': 1,
+                    'hour_rate': 0,
+                    'batch_size': 0,
+                    'completed_qty': 0,
+                    'process_loss_qty': 0,
+                    'actual_operation_time': 0,
+                    'actual_operating_cost': 0
+                },
+                {
+                    'operation': '缝制',
+                    'status': 'Pending',
+                    'time_in_mins': 180,
+                    'planned_operating_cost': 0,
+                    'sequence_id': 2,
+                    'hour_rate': 0,
+                    'batch_size': 0,
+                    'completed_qty': 0,
+                    'process_loss_qty': 0,
+                    'actual_operation_time': 0,
+                    'actual_operating_cost': 0
+                },
+                {
+                    'operation': '后道',
+                    'status': 'Pending',
+                    'time_in_mins': 60,
+                    'planned_operating_cost': 0,
+                    'sequence_id': 3,
+                    'hour_rate': 0,
+                    'batch_size': 0,
+                    'completed_qty': 0,
+                    'process_loss_qty': 0,
+                    'actual_operation_time': 0,
+                    'actual_operating_cost': 0
+                }
+            ]
         },
         {
             'bom_no': 'BOM-FG000354-012',
@@ -392,7 +510,7 @@ def test_batch_save_work_orders():
             'wip_warehouse': '在制品 - D',
             'custom_style_name': 'SM-0025',
             'custom_style_code': 'STYLE-0025'
-            # 这个工单没有分配信息，测试混合场景
+            # 这个工单没有分配信息和操作工序，测试混合场景
         }
     ]
     
@@ -402,7 +520,7 @@ def test_batch_save_work_orders():
     result['test_info'] = {
         'test_employee': test_employee,
         'assign_to_value': assign_to_value,
-        'message': '测试使用员工ID进行分配'
+        'message': '测试使用员工ID进行分配，包含operations字段'
     }
     
     return result
@@ -474,10 +592,17 @@ def test_employee_to_user_conversion():
 @frappe.whitelist()
 def save_work_order(**kwargs):
     """
-    保存生产工单的白名单API方法
+    保存生产工单的白名单API方法（支持操作工序）
     
     Args:
         **kwargs: 工单数据，支持直接传递参数或work_order_data字典
+        支持所有batch_save_work_orders中的字段，包括：
+        - 基本字段: production_item, qty, company, bom_no, stock_uom
+        - 可选字段: naming_series, description, item_name, expected_delivery_date, 
+                   planned_start_date, fg_warehouse, wip_warehouse, transfer_material_against,
+                   use_multi_level_bom, update_consumed_material_cost_in_project, sales_order
+        - 自定义字段: custom_work_oder_type, custom_style_name, custom_style_code
+        - 子表字段: required_items, operations
         
     Returns:
         dict: 包含操作结果的字典
@@ -573,6 +698,33 @@ def save_work_order(**kwargs):
                     'include_item_in_manufacturing': item.get('include_item_in_manufacturing', 1)
                 })
         
+        # 设置操作工序
+        if work_order_data.get('operations'):
+            try:
+                operations_list = work_order_data.get('operations')
+                if isinstance(operations_list, list) and operations_list:
+                    for operation in operations_list:
+                        if isinstance(operation, dict) and operation.get('operation'):
+                            work_order.append('operations', {
+                                'operation': operation.get('operation'),
+                                'status': operation.get('status', 'Pending'),
+                                'time_in_mins': operation.get('time_in_mins', 0),
+                                'planned_operating_cost': operation.get('planned_operating_cost', 0),
+                                'sequence_id': operation.get('sequence_id', 1),
+                                'hour_rate': operation.get('hour_rate', 0),
+                                'batch_size': operation.get('batch_size', 0),
+                                'completed_qty': operation.get('completed_qty', 0),
+                                'process_loss_qty': operation.get('process_loss_qty', 0),
+                                'actual_operation_time': operation.get('actual_operation_time', 0),
+                                'actual_operating_cost': operation.get('actual_operating_cost', 0)
+                            })
+                        else:
+                            # 记录无效的operation数据，但不影响工单创建
+                            frappe.log_error(f"工单 {work_order.name} 的operation数据无效: {operation}", "Work Order Operations Error")
+            except Exception as operations_error:
+                # 如果operations处理出错，记录错误但不影响工单创建
+                frappe.log_error(f"工单 {work_order.name} 处理operations时出错: {str(operations_error)}", "Work Order Operations Error")
+        
         # 保存工单
         work_order.insert()
         
@@ -614,7 +766,35 @@ def test_save_work_order():
         'use_multi_level_bom': 1,
         'wip_warehouse': '在制品 - D',
         'custom_style_name': 'SM-0023',
-        'custom_style_code': 'STYLE-0023'
+        'custom_style_code': 'STYLE-0023',
+        'operations': [
+            {
+                'operation': '裁剪',
+                'status': 'Pending',
+                'time_in_mins': 100,
+                'planned_operating_cost': 0,
+                'sequence_id': 1,
+                'hour_rate': 0,
+                'batch_size': 0,
+                'completed_qty': 0,
+                'process_loss_qty': 0,
+                'actual_operation_time': 0,
+                'actual_operating_cost': 0
+            },
+            {
+                'operation': '缝制',
+                'status': 'Pending',
+                'time_in_mins': 150,
+                'planned_operating_cost': 0,
+                'sequence_id': 2,
+                'hour_rate': 0,
+                'batch_size': 0,
+                'completed_qty': 0,
+                'process_loss_qty': 0,
+                'actual_operation_time': 0,
+                'actual_operating_cost': 0
+            }
+        ]
     }
     
     return save_work_order(**test_data)
@@ -984,11 +1164,15 @@ def test_get_work_order_list():
 @frappe.whitelist()
 def update_work_order(work_order_name, work_order_data):
     """
-    更新工单信息的白名单API方法
+    更新工单信息的白名单API方法（支持操作工序）
     
     Args:
         work_order_name: 工单名称
-        work_order_data: 要更新的工单数据
+        work_order_data: 要更新的工单数据，支持以下字段：
+        - 主表字段: 所有Work Order主表字段
+        - 子表字段: 
+          - required_items: 所需物料列表
+          - operations: 操作工序列表
         
     Returns:
         dict: 操作结果
@@ -1004,7 +1188,7 @@ def update_work_order(work_order_name, work_order_data):
         
         # 更新字段
         for field, value in work_order_data.items():
-            if field != 'required_items' and hasattr(work_order, field):
+            if field not in ['required_items', 'operations'] and hasattr(work_order, field):
                 setattr(work_order, field, value)
         
         # 更新所需物料
@@ -1012,6 +1196,24 @@ def update_work_order(work_order_name, work_order_data):
             work_order.required_items = []
             for item in work_order_data['required_items']:
                 work_order.append('required_items', item)
+        
+        # 更新操作工序
+        if 'operations' in work_order_data:
+            try:
+                operations_list = work_order_data['operations']
+                if isinstance(operations_list, list):
+                    work_order.operations = []
+                    for operation in operations_list:
+                        if isinstance(operation, dict) and operation.get('operation'):
+                            work_order.append('operations', operation)
+                        else:
+                            # 记录无效的operation数据，但不影响工单更新
+                            frappe.log_error(f"工单 {work_order_name} 的operation数据无效: {operation}", "Work Order Operations Update Error")
+                else:
+                    frappe.log_error(f"工单 {work_order_name} 的operations字段不是列表: {operations_list}", "Work Order Operations Update Error")
+            except Exception as operations_error:
+                # 如果operations处理出错，记录错误但不影响工单更新
+                frappe.log_error(f"工单 {work_order_name} 处理operations时出错: {str(operations_error)}", "Work Order Operations Update Error")
         
         work_order.save()
         
@@ -1626,10 +1828,292 @@ def complete_work_order(work_order_id: str, qty: float):
             'message': f'完工工单时出错: {str(e)}'
         }
 
+
+@frappe.whitelist()
+def test_operations_functionality():
+    """
+    专门测试operations字段功能的函数
+    """
+    test_data = [
+        {
+            'bom_no': 'BOM-FG000589-037',
+            'company': 'DTY',
+            'custom_work_oder_type': '大货工单',
+            'description': '2026-LYQ - te0033 (t5) - 测试operations',
+            'expected_delivery_date': '2025-08-24',
+            'fg_warehouse': '在制品 - D',
+            'item_name': 'FG000589',
+            'naming_series': 'MFG-WO-.YYYY.-',
+            'planned_start_date': '2025-08-18',
+            'production_item': 'FG000589',
+            'qty': 2,
+            'stock_uom': '件',
+            'transfer_material_against': 'Work Order',
+            'use_multi_level_bom': 1,
+            'wip_warehouse': '在制品 - D',
+            'update_consumed_material_cost_in_project': 1,
+            'sales_order': 'SO-250818-02913-04',
+            'custom_assigned_employee': '',
+            'custom_assigned_employee_name': '',
+            'custom_pattern_name': 'RGPP-00421',
+            'assign_to': [],
+            'assignment_description': '生产通知单: SO-250818-02913-04',
+            'assignment_priority': 'Medium',
+            'operations': [
+                {
+                    'operation': '裁剪',
+                    'status': 'Pending',
+                    'time_in_mins': 100,
+                    'planned_operating_cost': 0,
+                    'sequence_id': 1,
+                    'hour_rate': 0,
+                    'batch_size': 0,
+                    'completed_qty': 0,
+                    'process_loss_qty': 0,
+                    'actual_operation_time': 0,
+                    'actual_operating_cost': 0
+                },
+                {
+                    'operation': '缝制',
+                    'status': 'Pending',
+                    'time_in_mins': 100,
+                    'planned_operating_cost': 0,
+                    'sequence_id': 2,
+                    'hour_rate': 0,
+                    'batch_size': 0,
+                    'completed_qty': 0,
+                    'process_loss_qty': 0,
+                    'actual_operation_time': 0,
+                    'actual_operating_cost': 0
+                },
+                {
+                    'operation': '后道',
+                    'status': 'Pending',
+                    'time_in_mins': 100,
+                    'planned_operating_cost': 0,
+                    'sequence_id': 3,
+                    'hour_rate': 0,
+                    'batch_size': 0,
+                    'completed_qty': 0,
+                    'process_loss_qty': 0,
+                    'actual_operation_time': 0,
+                    'actual_operating_cost': 0
+                }
+            ]
+        }
+    ]
+    
+    # 测试批量保存
+    batch_result = batch_save_work_orders(test_data)
+    
+    # 如果批量保存成功，测试获取工单信息
+    if batch_result.get('status') == 'success' and batch_result.get('created_work_orders'):
+        work_order_name = batch_result['created_work_orders'][0]['work_order_name']
+        
+        # 获取工单详细信息
+        work_order_info = get_work_order(work_order_name)
+        
+        # 获取工单列表（包含operations）
+        work_order_list = get_work_order_list(
+            page=1, 
+            page_size=1, 
+            filters={'name': work_order_name}
+        )
+        
+        return {
+            'status': 'success',
+            'message': 'operations功能测试完成',
+            'batch_save_result': batch_result,
+            'work_order_detail': work_order_info,
+            'work_order_list': work_order_list,
+            'test_summary': {
+                'operations_count': len(test_data[0]['operations']),
+                'operations_names': [op['operation'] for op in test_data[0]['operations']],
+                'created_work_order': work_order_name
+            }
+        }
+    else:
+        return {
+            'status': 'error',
+            'message': 'operations功能测试失败',
+            'batch_save_result': batch_result
+        }
+
+
+@frappe.whitelist()
+def test_operations_error_handling():
+    """
+    测试operations字段错误处理的函数
+    """
+    test_cases = [
+        {
+            'name': '正常operations数据',
+            'data': {
+                'bom_no': 'BOM-FG000589-037',
+                'company': 'DTY',
+                'production_item': 'FG000589',
+                'qty': 1,
+                'operations': [
+                    {
+                        'operation': '裁剪',
+                        'status': 'Pending',
+                        'time_in_mins': 100
+                    }
+                ]
+            }
+        },
+        {
+            'name': '没有operations字段',
+            'data': {
+                'bom_no': 'BOM-FG000589-037',
+                'company': 'DTY',
+                'production_item': 'FG000589',
+                'qty': 1
+            }
+        },
+        {
+            'name': 'operations为空列表',
+            'data': {
+                'bom_no': 'BOM-FG000589-037',
+                'company': 'DTY',
+                'production_item': 'FG000589',
+                'qty': 1,
+                'operations': []
+            }
+        },
+        {
+            'name': 'operations为None',
+            'data': {
+                'bom_no': 'BOM-FG000589-037',
+                'company': 'DTY',
+                'production_item': 'FG000589',
+                'qty': 1,
+                'operations': None
+            }
+        },
+        {
+            'name': 'operations包含无效数据',
+            'data': {
+                'bom_no': 'BOM-FG000589-037',
+                'company': 'DTY',
+                'production_item': 'FG000589',
+                'qty': 1,
+                'operations': [
+                    {
+                        'operation': '裁剪',
+                        'status': 'Pending',
+                        'time_in_mins': 100
+                    },
+                    {
+                        'status': 'Pending'  # 缺少operation字段
+                    },
+                    'invalid_operation',  # 不是字典
+                    {
+                        'operation': '缝制',
+                        'status': 'Pending',
+                        'time_in_mins': 150
+                    }
+                ]
+            }
+        },
+        {
+            'name': 'operations不是列表',
+            'data': {
+                'bom_no': 'BOM-FG000589-037',
+                'company': 'DTY',
+                'production_item': 'FG000589',
+                'qty': 1,
+                'operations': 'not_a_list'
+            }
+        }
+    ]
+    
+    results = []
+    
+    for i, test_case in enumerate(test_cases):
+        try:
+            # 测试批量保存
+            batch_result = batch_save_work_orders([test_case['data']])
+            
+            results.append({
+                'test_case': test_case['name'],
+                'status': 'success',
+                'batch_result': batch_result,
+                'message': f"测试用例 {i+1} 执行成功"
+            })
+            
+        except Exception as e:
+            results.append({
+                'test_case': test_case['name'],
+                'status': 'error',
+                'error': str(e),
+                'message': f"测试用例 {i+1} 执行失败"
+            })
+    
+    # 统计结果
+    successful_tests = [r for r in results if r['status'] == 'success']
+    failed_tests = [r for r in results if r['status'] == 'error']
+    
+    return {
+        'status': 'success',
+        'message': f'operations错误处理测试完成: 成功 {len(successful_tests)} 个，失败 {len(failed_tests)} 个',
+        'total_tests': len(test_cases),
+        'successful_tests': len(successful_tests),
+        'failed_tests': len(failed_tests),
+        'test_results': results,
+        'summary': {
+            'should_work_without_operations': any(r['test_case'] == '没有operations字段' and r['status'] == 'success' for r in results),
+            'should_work_with_empty_operations': any(r['test_case'] == 'operations为空列表' and r['status'] == 'success' for r in results),
+            'should_work_with_invalid_operations': any(r['test_case'] == 'operations包含无效数据' and r['status'] == 'success' for r in results)
+        }
+    }
+
+
+@frappe.whitelist()
+def test_work_order_without_operations():
+    """
+    测试没有operations字段的工单创建
+    """
+    test_data = [
+        {
+            'bom_no': 'BOM-FG000589-037',
+            'company': 'DTY',
+            'custom_work_oder_type': '大货工单',
+            'description': '测试工单 - 没有operations字段',
+            'expected_delivery_date': '2025-08-24',
+            'fg_warehouse': '在制品 - D',
+            'item_name': 'FG000589',
+            'naming_series': 'MFG-WO-.YYYY.-',
+            'planned_start_date': '2025-08-18',
+            'production_item': 'FG000589',
+            'qty': 1,
+            'stock_uom': '件',
+            'transfer_material_against': 'Work Order',
+            'use_multi_level_bom': 1,
+            'wip_warehouse': '在制品 - D',
+            'update_consumed_material_cost_in_project': 1,
+            'sales_order': 'SO-250818-02913-04',
+            'custom_pattern_name': 'RGPP-00421'
+            # 注意：这里没有operations字段
+        }
+    ]
+    
+    result = batch_save_work_orders(test_data)
+    
+    return {
+        'status': 'success',
+        'message': '测试没有operations字段的工单创建',
+        'result': result,
+        'test_info': {
+            'has_operations_field': False,
+            'expected_behavior': '工单应该正常创建，不受operations字段缺失影响'
+        }
+    }
+
 """
 === CURL 测试示例 ===
 
-1. 批量保存工单（包含分配功能）的curl命令：
+1. 批量保存工单（包含分配功能和操作工序）的curl命令：
 
 curl -X POST "http://your-site-url/api/method/rongguan_erp.utils.api.work_order.batch_save_work_orders" \
 -H "Content-Type: application/json" \
@@ -1637,67 +2121,119 @@ curl -X POST "http://your-site-url/api/method/rongguan_erp.utils.api.work_order.
 -d '{
   "work_orders_data": [
     {
-      "bom_no": "BOM-FG000354-012",
+      "bom_no": "BOM-FG000589-037",
       "company": "DTY",
-      "custom_work_oder_type": "纸样工单",
-      "description": "SM-0023 - 纸样制作 (API测试1)",
-      "expected_delivery_date": "2025-06-17",
+      "custom_work_oder_type": "大货工单",
+      "description": "2026-LYQ - te0033 (t5) - API测试1",
+      "expected_delivery_date": "2025-08-24",
       "fg_warehouse": "在制品 - D",
-      "item_name": "SM-0023 - 纸样",
+      "item_name": "FG000589",
       "naming_series": "MFG-WO-.YYYY.-",
-      "planned_start_date": "2025-06-10 10:00:00",
-      "production_item": "FG000354",
-      "qty": 3,
-      "stock_uom": "Nos",
+      "planned_start_date": "2025-08-18",
+      "production_item": "FG000589",
+      "qty": 2,
+      "stock_uom": "件",
       "transfer_material_against": "Work Order",
       "use_multi_level_bom": 1,
       "wip_warehouse": "在制品 - D",
-      "custom_style_name": "SM-0023",
-      "custom_style_code": "STYLE-0023",
+      "update_consumed_material_cost_in_project": 1,
+      "sales_order": "SO-250818-02913-04",
+      "custom_pattern_name": "RGPP-00421",
       "assign_to": "administrator@example.com",
       "assignment_description": "API测试工单1 - 请及时处理",
-      "assignment_priority": "High"
+      "assignment_priority": "High",
+      "operations": [
+        {
+          "operation": "裁剪",
+          "status": "Pending",
+          "time_in_mins": 100,
+          "planned_operating_cost": 0,
+          "sequence_id": 1,
+          "hour_rate": 0,
+          "batch_size": 0,
+          "completed_qty": 0,
+          "process_loss_qty": 0,
+          "actual_operation_time": 0,
+          "actual_operating_cost": 0
+        },
+        {
+          "operation": "缝制",
+          "status": "Pending",
+          "time_in_mins": 100,
+          "planned_operating_cost": 0,
+          "sequence_id": 2,
+          "hour_rate": 0,
+          "batch_size": 0,
+          "completed_qty": 0,
+          "process_loss_qty": 0,
+          "actual_operation_time": 0,
+          "actual_operating_cost": 0
+        },
+        {
+          "operation": "后道",
+          "status": "Pending",
+          "time_in_mins": 100,
+          "planned_operating_cost": 0,
+          "sequence_id": 3,
+          "hour_rate": 0,
+          "batch_size": 0,
+          "completed_qty": 0,
+          "process_loss_qty": 0,
+          "actual_operation_time": 0,
+          "actual_operating_cost": 0
+        }
+      ]
     },
     {
-      "bom_no": "BOM-FG000354-012",
+      "bom_no": "BOM-FG000580-052",
       "company": "DTY",
-      "custom_work_oder_type": "纸样工单",
-      "description": "SM-0024 - 纸样制作 (API测试2)",
-      "expected_delivery_date": "2025-06-18",
+      "custom_work_oder_type": "大货工单",
+      "description": "2026-LYQ - te0033 (t5) - API测试2",
+      "expected_delivery_date": "2025-08-24",
       "fg_warehouse": "在制品 - D",
-      "item_name": "SM-0024 - 纸样",
+      "item_name": "FG000580",
       "naming_series": "MFG-WO-.YYYY.-",
-      "planned_start_date": "2025-06-11 10:00:00",
-      "production_item": "FG000354",
-      "qty": 5,
-      "stock_uom": "Nos",
+      "planned_start_date": "2025-08-18",
+      "production_item": "FG000580",
+      "qty": 3,
+      "stock_uom": "件",
       "transfer_material_against": "Work Order",
       "use_multi_level_bom": 1,
       "wip_warehouse": "在制品 - D",
-      "custom_style_name": "SM-0024",
-      "custom_style_code": "STYLE-0024",
+      "update_consumed_material_cost_in_project": 1,
+      "sales_order": "SO-250818-02913-04",
+      "custom_pattern_name": "RGPP-00421",
       "assign_to": ["administrator@example.com", "user2@example.com"],
       "assignment_description": "API测试工单2 - 分配给多个用户",
-      "assignment_priority": "Medium"
-    },
-    {
-      "bom_no": "BOM-FG000354-012",
-      "company": "DTY",
-      "custom_work_oder_type": "纸样工单",
-      "description": "SM-0025 - 纸样制作 (API测试3)",
-      "expected_delivery_date": "2025-06-19",
-      "fg_warehouse": "在制品 - D",
-      "item_name": "SM-0025 - 纸样",
-      "naming_series": "MFG-WO-.YYYY.-",
-      "planned_start_date": "2025-06-12 10:00:00",
-      "production_item": "FG000354",
-      "qty": 2,
-      "stock_uom": "Nos",
-      "transfer_material_against": "Work Order",
-      "use_multi_level_bom": 1,
-      "wip_warehouse": "在制品 - D",
-      "custom_style_name": "SM-0025",
-      "custom_style_code": "STYLE-0025"
+      "assignment_priority": "Medium",
+      "operations": [
+        {
+          "operation": "裁剪",
+          "status": "Pending",
+          "time_in_mins": 120,
+          "planned_operating_cost": 0,
+          "sequence_id": 1,
+          "hour_rate": 0,
+          "batch_size": 0,
+          "completed_qty": 0,
+          "process_loss_qty": 0,
+          "actual_operation_time": 0,
+          "actual_operating_cost": 0
+        },
+        {
+          "operation": "缝制",
+          "status": "Pending",
+          "time_in_mins": 180,
+          "planned_operating_cost": 0,
+          "sequence_id": 2,
+          "hour_rate": 0,
+          "batch_size": 0,
+          "completed_qty": 0,
+          "process_loss_qty": 0,
+          "actual_operation_time": 0,
+          "actual_operating_cost": 0
+        }
+      ]
     }
   ]
 }'
@@ -1814,4 +2350,41 @@ GET /api/method/rongguan_erp.utils.api.work_order.get_work_order_job_cards
 
 8. 测试Job Card功能：
 bench execute rongguan_erp.utils.api.work_order.test_get_work_order_job_cards
+
+9. 测试Operations功能：
+bench execute rongguan_erp.utils.api.work_order.test_operations_functionality
+
+10. Operations字段说明：
+operations字段是Work Order的子表，用于定义生产工序。每个工序包含以下字段：
+- operation: 工序名称（必填）
+- status: 状态，可选值：Pending, Work In Progress, Completed（默认Pending）
+- time_in_mins: 计划时间，单位分钟（默认0）
+- planned_operating_cost: 计划操作成本（默认0）
+- sequence_id: 序列ID，用于排序（默认1）
+- hour_rate: 小时费率（默认0）
+- batch_size: 批次大小（默认0）
+- completed_qty: 完成数量（默认0）
+- process_loss_qty: 工艺损耗数量（默认0）
+- actual_operation_time: 实际操作时间（默认0）
+- actual_operating_cost: 实际操作成本（默认0）
+
+11. 支持的API方法：
+- batch_save_work_orders: 批量保存工单（支持operations）
+- save_work_order: 保存单个工单（支持operations）
+- update_work_order: 更新工单（支持operations）
+- get_work_order: 获取工单详情（包含operations）
+- get_work_order_list: 获取工单列表（包含operations）
+
+12. Operations字段容错处理：
+- 如果operations字段不存在，工单创建不受影响
+- 如果operations为空列表或None，工单创建不受影响
+- 如果operations包含无效数据（缺少operation字段或格式错误），会记录错误但工单创建不受影响
+- 如果operations不是列表格式，会记录错误但工单创建不受影响
+- 所有operations相关的错误都会记录到系统日志中，便于排查问题
+
+13. 测试Operations错误处理：
+bench execute rongguan_erp.utils.api.work_order.test_operations_error_handling
+
+14. 测试没有Operations字段的工单创建：
+bench execute rongguan_erp.utils.api.work_order.test_work_order_without_operations
 """
