@@ -437,7 +437,7 @@
   "name": "Work Order-custom_work_oder_type",
   "no_copy": 0,
   "non_negative": 0,
-  "options": "样衣工单\n纸样工单",
+  "options": "样衣工单\n大货工单",
   "permlevel": 0,
   "placeholder": null,
   "precision": "",
