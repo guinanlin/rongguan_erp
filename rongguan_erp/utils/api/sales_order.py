@@ -59,12 +59,12 @@ def map_sales_order_to_production_order(so, items_data):
 
 
     # 构建生产订单数据
-    order_type_mapping = {
-        "Sales": "大货",  # 示例映射，可以根据实际业务需求添加更多映射
-        # "Sales Sample": "销售样", # 假设销售订单的销售样类型对应生产订单的销售样
-        # "Garment Sample": "样衣", # 假设销售订单的样衣类型对应生产订单的样衣
+    # 根据销售订单的 custom_sub_order_type 字段进行映射
+    sub_order_type_mapping = {
+        "样衣销售合同": "样衣",  # 样衣销售合同对应生产订单的样衣类型
+        "大货销售合同": "大货",  # 大货销售合同对应生产订单的大货类型
     }
-    production_order_type = order_type_mapping.get(so.order_type, "大货") # 默认映射为"大货"
+    production_order_type = sub_order_type_mapping.get(so.custom_sub_order_type, "大货") # 默认映射为"大货"
 
     production_order_data = {
         "notificationNumber": so.name,  # 通知单号（使用销售订单号）
