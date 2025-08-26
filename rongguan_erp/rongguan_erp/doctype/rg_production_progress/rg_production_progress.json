@@ -1,0 +1,178 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-08-25 22:20:54.034371",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "sales_order_id",
+  "customer",
+  "style_code",
+  "product_name",
+  "color",
+  "quantity",
+  "delivery_date",
+  "salesperson",
+  "qc_inspector",
+  "factory_name",
+  "production_status",
+  "sealing_sample_status",
+  "sample_techpack_info",
+  "production_order_release_date",
+  "rework_details",
+  "remarks",
+  "work_order_id"
+ ],
+ "fields": [
+  {
+   "description": "\u9500\u552e\u8ba2\u5355\u7684\u552f\u4e00\u5185\u90e8\u6807\u8bc6\u7b26\uff0c\u5bf9\u5e94Excel\u4e2d\u7684\u5e8f\u53f7",
+   "fieldname": "sales_order_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u9500\u552e\u8ba2\u5355ID",
+   "reqd": 1
+  },
+  {
+   "description": "\u5ba2\u6237\u540d\u79f0\uff0c\u5bf9\u5e94Excel\u4e2d\u7684\u5ba2\u6237",
+   "fieldname": "customer",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u5ba2\u6237",
+   "length": 100,
+   "reqd": 1
+  },
+  {
+   "description": "\u6b3e\u53f7\uff0c\u5bf9\u5e94Excel\u4e2d\u7684\u6b3e\u53f7",
+   "fieldname": "style_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u6b3e\u53f7",
+   "length": 50,
+   "reqd": 1
+  },
+  {
+   "description": "\u4ea7\u54c1\u540d\u79f0\uff0c\u5bf9\u5e94Excel\u4e2d\u7684\u540d\u79f0",
+   "fieldname": "product_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u4ea7\u54c1\u540d\u79f0",
+   "length": 255,
+   "reqd": 1
+  },
+  {
+   "description": "\u989c\u8272\uff0c\u5bf9\u5e94Excel\u4e2d\u7684\u989c\u8272",
+   "fieldname": "color",
+   "fieldtype": "Data",
+   "label": "\u989c\u8272",
+   "length": 50
+  },
+  {
+   "description": "\u6570\u91cf\uff0c\u5bf9\u5e94Excel\u4e2d\u7684\u6570\u91cf",
+   "fieldname": "quantity",
+   "fieldtype": "Int",
+   "label": "\u6570\u91cf",
+   "reqd": 1
+  },
+  {
+   "description": "\u9884\u8ba1\u8d27\u671f\uff0c\u5bf9\u5e94Excel\u4e2d\u7684\u8d27\u671f",
+   "fieldname": "delivery_date",
+   "fieldtype": "Date",
+   "label": "\u9884\u8ba1\u8d27\u671f",
+   "reqd": 1
+  },
+  {
+   "description": "\u4e1a\u52a1\u5458\uff0c\u5bf9\u5e94Excel\u4e2d\u7684\u4e1a\u52a1\u5458",
+   "fieldname": "salesperson",
+   "fieldtype": "Data",
+   "label": "\u4e1a\u52a1\u5458",
+   "length": 100
+  },
+  {
+   "description": "QC\u68c0\u9a8c\u5458\u59d3\u540d\uff0c\u5bf9\u5e94Excel\u4e2d\u7684QC\u59d3\u540d",
+   "fieldname": "qc_inspector",
+   "fieldtype": "Data",
+   "label": "QC\u68c0\u9a8c\u5458",
+   "length": 100
+  },
+  {
+   "description": "\u5de5\u5382\u540d\u79f0\uff0c\u5bf9\u5e94Excel\u4e2d\u7684\u5de5\u5382",
+   "fieldname": "factory_name",
+   "fieldtype": "Data",
+   "label": "\u5de5\u5382",
+   "length": 100
+  },
+  {
+   "description": "\u751f\u4ea7\u8fdb\u5ea6\u5f53\u524d\u72b6\u6001\u63cf\u8ff0\uff0c\u5bf9\u5e94Excel\u4e2d\u7684\u751f\u4ea7\u8fdb\u5ea6",
+   "fieldname": "production_status",
+   "fieldtype": "Data",
+   "label": "\u751f\u4ea7\u8fdb\u5ea6",
+   "length": 255
+  },
+  {
+   "description": "\u5c01\u6837\u60c5\u51b5\u63cf\u8ff0\uff0c\u5bf9\u5e94Excel\u4e2d\u7684\u5c01\u6837\u60c5\u51b5",
+   "fieldname": "sealing_sample_status",
+   "fieldtype": "Data",
+   "label": "\u5c01\u6837\u60c5\u51b5",
+   "length": 255
+  },
+  {
+   "description": "\u6837\u8863\u3001\u9762\u8f85\u5361\u901a\u77e5\u53ca\u5de5\u827a\u5355\u4fe1\u606f\uff0c\u5bf9\u5e94Excel\u4e2d\u7684\u6837\u8863\u9762\u8f85\u5361\u901a\u77e5\u53ca\u5de5\u827a\u5355",
+   "fieldname": "sample_techpack_info",
+   "fieldtype": "Data",
+   "label": "\u6837\u8863\u9762\u8f85\u5361\u5de5\u827a\u5355",
+   "length": 255
+  },
+  {
+   "description": "\u4e0b\u53d1\u751f\u4ea7\u5355\u65e5\u671f\uff0c\u5bf9\u5e94Excel\u4e2d\u7684\u4e0b\u53d1\u751f\u4ea7\u5355\u65f6\u95f4",
+   "fieldname": "production_order_release_date",
+   "fieldtype": "Date",
+   "label": "\u4e0b\u53d1\u751f\u4ea7\u5355\u65e5\u671f"
+  },
+  {
+   "description": "\u8fd4\u5de5\u60c5\u51b5\u63cf\u8ff0\uff0c\u5bf9\u5e94Excel\u4e2d\u7684\u8fd4\u5de5\u60c5\u51b5",
+   "fieldname": "rework_details",
+   "fieldtype": "Data",
+   "label": "\u8fd4\u5de5\u60c5\u51b5",
+   "length": 255
+  },
+  {
+   "description": "\u5907\u6ce8\u4fe1\u606f\uff0c\u5bf9\u5e94Excel\u4e2d\u7684\u5907\u6ce8\u60c5\u51b5",
+   "fieldname": "remarks",
+   "fieldtype": "Text",
+   "label": "\u5907\u6ce8"
+  },
+  {
+   "description": "\u5de5\u5355ID\uff0c\u7528\u4e8e\u552f\u4e00\u6807\u8bc6\u4e00\u4e2a\u751f\u4ea7\u5de5\u5355",
+   "fieldname": "work_order_id",
+   "fieldtype": "Data",
+   "label": "\u5de5\u5355ID",
+   "length": 50
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-08-26 09:09:20.252987",
+ "modified_by": "Administrator",
+ "module": "Rongguan Erp",
+ "name": "RG Production Progress",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
