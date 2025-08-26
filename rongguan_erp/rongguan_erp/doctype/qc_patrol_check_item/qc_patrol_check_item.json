@@ -1,0 +1,79 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-08-27 00:36:11.943931",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item_id",
+  "category",
+  "subcategory",
+  "standard",
+  "result",
+  "fail_count",
+  "remark"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u68c0\u67e5\u9879\u76ee\u7f16\u53f7",
+   "reqd": 1
+  },
+  {
+   "fieldname": "category",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "\u68c0\u67e5\u7c7b\u522b",
+   "options": "\u5de5\u827a\u5236\u4f5c\n\u5c3a\u5bf8\u89c4\u683c\n\u5916\u89c2\u6574\u7406",
+   "reqd": 1
+  },
+  {
+   "fieldname": "subcategory",
+   "fieldtype": "Data",
+   "label": "\u68c0\u67e5\u5b50\u7c7b\u522b"
+  },
+  {
+   "fieldname": "standard",
+   "fieldtype": "Text",
+   "in_list_view": 1,
+   "label": "\u68c0\u67e5\u6807\u51c6",
+   "reqd": 1
+  },
+  {
+   "fieldname": "result",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "\u68c0\u67e5\u7ed3\u679c",
+   "options": "\u5408\u683c\n\u4e0d\u5408\u683c\n\u5f85\u5b9a",
+   "reqd": 1
+  },
+  {
+   "default": "0",
+   "fieldname": "fail_count",
+   "fieldtype": "Int",
+   "label": "\u4e0d\u5408\u683c\u6570\u91cf"
+  },
+  {
+   "fieldname": "remark",
+   "fieldtype": "Text",
+   "label": "\u5907\u6ce8\u8bf4\u660e"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-08-27 01:37:52.132428",
+ "modified_by": "Administrator",
+ "module": "Rongguan Erp",
+ "name": "QC Patrol Check Item",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

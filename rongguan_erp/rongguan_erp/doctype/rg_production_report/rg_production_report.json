@@ -1,0 +1,159 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-08-26 21:06:32.976270",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "style",
+  "style_number",
+  "planned_quantity",
+  "sales_order",
+  "reported_by",
+  "report_date",
+  "column_break_wcgc",
+  "work_order_ids",
+  "section_break_5vji",
+  "production_started_quantity",
+  "production_started_remark",
+  "column_break_uqkw",
+  "finished_goods_quantity",
+  "finished_goods_remark",
+  "column_break_suxf",
+  "delivered_quantity",
+  "delivered_remark"
+ ],
+ "fields": [
+  {
+   "description": "\u5de5\u5355\u53f7\u5217\u8868\uff0c\u591a\u4e2a\u5de5\u5355\u7528\u9017\u53f7\u5206\u9694",
+   "fieldname": "work_order_ids",
+   "fieldtype": "Text",
+   "label": "\u5de5\u5355\u53f7\u5217\u8868",
+   "reqd": 1
+  },
+  {
+   "fieldname": "style",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u6b3e\u5f0f",
+   "reqd": 1
+  },
+  {
+   "fieldname": "style_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u6b3e\u53f7",
+   "reqd": 1
+  },
+  {
+   "fieldname": "planned_quantity",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "\u8ba1\u5212\u751f\u4ea7\u6570\u91cf",
+   "reqd": 1
+  },
+  {
+   "description": "\u5173\u8054\u7684\u9500\u552e\u8ba2\u5355\uff0c\u7528\u4e8e\u8ffd\u6eaf\u9500\u552e\u5408\u540c",
+   "fieldname": "sales_order",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u9500\u552e\u8ba2\u5355",
+   "options": "Sales Order",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_5vji",
+   "fieldtype": "Section Break",
+   "label": "\u751f\u4ea7\u8fdb\u5ea6"
+  },
+  {
+   "description": "\u751f\u4ea7\u4e2d\u8282\u70b9\u5b8c\u6210\u7684\u6570\u91cf",
+   "fieldname": "production_started_quantity",
+   "fieldtype": "Int",
+   "label": "\u751f\u4ea7\u4e2d\u5b8c\u6210\u6570\u91cf"
+  },
+  {
+   "description": "\u751f\u4ea7\u4e2d\u8282\u70b9\u7684\u5907\u6ce8\u4fe1\u606f",
+   "fieldname": "production_started_remark",
+   "fieldtype": "Text",
+   "label": "\u751f\u4ea7\u4e2d\u5907\u6ce8"
+  },
+  {
+   "description": "\u5df2\u5b8c\u5de5\u6210\u54c1\u8282\u70b9\u5b8c\u6210\u7684\u6570\u91cf",
+   "fieldname": "finished_goods_quantity",
+   "fieldtype": "Int",
+   "label": "\u5df2\u5b8c\u5de5\u6570\u91cf"
+  },
+  {
+   "description": "\u5df2\u5b8c\u5de5\u6210\u54c1\u8282\u70b9\u7684\u5907\u6ce8\u4fe1\u606f",
+   "fieldname": "finished_goods_remark",
+   "fieldtype": "Text",
+   "label": "\u5df2\u5b8c\u5de5\u5907\u6ce8"
+  },
+  {
+   "description": "\u5df2\u4ea4\u4ed8\u8282\u70b9\u5b8c\u6210\u7684\u6570\u91cf",
+   "fieldname": "delivered_quantity",
+   "fieldtype": "Int",
+   "label": "\u5df2\u4ea4\u4ed8\u6570\u91cf"
+  },
+  {
+   "description": "\u5df2\u4ea4\u4ed8\u8282\u70b9\u7684\u5907\u6ce8\u4fe1\u606f",
+   "fieldname": "delivered_remark",
+   "fieldtype": "Text",
+   "label": "\u5df2\u4ea4\u4ed8\u5907\u6ce8"
+  },
+  {
+   "description": "\u8bb0\u5f55\u8c01\u63d0\u4ea4\u7684\u62a5\u5de5\u4fe1\u606f",
+   "fieldname": "reported_by",
+   "fieldtype": "Link",
+   "label": "\u62a5\u5de5\u4eba",
+   "options": "User",
+   "reqd": 1
+  },
+  {
+   "description": "\u8bb0\u5f55\u62a5\u5de5\u7684\u5177\u4f53\u65f6\u95f4\u70b9",
+   "fieldname": "report_date",
+   "fieldtype": "Datetime",
+   "label": "\u62a5\u5de5\u65f6\u95f4",
+   "reqd": 1
+  },
+  {
+   "fieldname": "column_break_wcgc",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_uqkw",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_suxf",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-08-26 21:12:00.516267",
+ "modified_by": "Administrator",
+ "module": "Rongguan Erp",
+ "name": "RG Production Report",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

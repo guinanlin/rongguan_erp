@@ -1,0 +1,157 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "autoname": "format:PRE{#####}",
+ "creation": "2025-08-26 19:52:10.355607",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "product_id",
+  "work_order_id",
+  "customer",
+  "style_number",
+  "product_name",
+  "factory",
+  "merchandiser",
+  "participants",
+  "sample_date",
+  "status",
+  "total_quantity",
+  "produced_quantity",
+  "column_break_0",
+  "remarks",
+  "issue_description",
+  "sample_images",
+  "issue_images"
+ ],
+ "fields": [
+  {
+   "fieldname": "product_id",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u4ea7\u54c1ID",
+   "reqd": 1
+  },
+  {
+   "fieldname": "work_order_id",
+   "fieldtype": "Link",
+   "label": "\u5de5\u5355",
+   "options": "Work Order"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u5ba2\u6237",
+   "options": "Customer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "style_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u6b3e\u53f7",
+   "reqd": 1
+  },
+  {
+   "fieldname": "product_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u4ea7\u54c1\u540d\u79f0",
+   "reqd": 1
+  },
+  {
+   "fieldname": "factory",
+   "fieldtype": "Link",
+   "label": "\u52a0\u5de5\u5382",
+   "options": "Supplier",
+   "reqd": 1
+  },
+  {
+   "fieldname": "merchandiser",
+   "fieldtype": "Link",
+   "label": "\u8ddf\u5355\u4eba\u5458",
+   "options": "User"
+  },
+  {
+   "fieldname": "participants",
+   "fieldtype": "Small Text",
+   "label": "\u53c2\u4e0e\u4eba\u5458"
+  },
+  {
+   "fieldname": "sample_date",
+   "fieldtype": "Date",
+   "label": "\u5c01\u6837\u65e5\u671f",
+   "reqd": 1
+  },
+  {
+   "default": "\u5f85\u5ba1\u6838",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "label": "\u72b6\u6001",
+   "options": "\u5f85\u5ba1\u6838\n\u5df2\u786e\u8ba4\n\u9700\u4fee\u6539",
+   "reqd": 1
+  },
+  {
+   "fieldname": "total_quantity",
+   "fieldtype": "Int",
+   "label": "\u5de5\u5355\u603b\u6570\u91cf"
+  },
+  {
+   "fieldname": "produced_quantity",
+   "fieldtype": "Int",
+   "label": "\u5df2\u751f\u4ea7\u6570\u91cf"
+  },
+  {
+   "fieldname": "column_break_0",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Text",
+   "label": "\u5907\u6ce8"
+  },
+  {
+   "fieldname": "issue_description",
+   "fieldtype": "Text",
+   "label": "\u95ee\u9898\u63cf\u8ff0"
+  },
+  {
+   "fieldname": "sample_images",
+   "fieldtype": "Attach",
+   "label": "\u6837\u8863\u56fe\u7247\u9644\u4ef6"
+  },
+  {
+   "fieldname": "issue_images",
+   "fieldtype": "Attach",
+   "label": "\u95ee\u9898\u56fe\u7247\u9644\u4ef6"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-08-26 20:23:35.675072",
+ "modified_by": "Administrator",
+ "module": "Rongguan Erp",
+ "name": "RG Pre Production Sample",
+ "naming_rule": "Expression",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

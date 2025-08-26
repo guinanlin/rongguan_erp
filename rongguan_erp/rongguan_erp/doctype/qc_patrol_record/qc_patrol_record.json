@@ -1,0 +1,197 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-08-27 00:35:42.304341",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "tab_basic_info",
+  "\u57fa\u7840\u4fe1\u606f_section",
+  "report_number",
+  "start_time",
+  "inspector",
+  "product_name",
+  "process_stage",
+  "overall_evaluation",
+  "total_quantity",
+  "column_break_pxub",
+  "patrol_date",
+  "end_time",
+  "factory",
+  "order_number",
+  "sample_quantity",
+  "need_recheck",
+  "recheck_date",
+  "column_break_fekk",
+  "recommendations",
+  "section_break_yhye",
+  "qc_patrol_problem_record",
+  "tab_patrol_points",
+  "qc_patrol_check_item"
+ ],
+ "fields": [
+  {
+   "fieldname": "tab_basic_info",
+   "fieldtype": "Tab Break",
+   "label": "\u57fa\u672c\u4fe1\u606f"
+  },
+  {
+   "fieldname": "\u57fa\u7840\u4fe1\u606f_section",
+   "fieldtype": "Section Break",
+   "label": "\u57fa\u7840\u4fe1\u606f"
+  },
+  {
+   "fieldname": "report_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u62a5\u544a\u7f16\u53f7",
+   "reqd": 1
+  },
+  {
+   "fieldname": "patrol_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "\u5de1\u67e5\u65e5\u671f",
+   "reqd": 1
+  },
+  {
+   "fieldname": "start_time",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "\u5f00\u59cb\u65f6\u95f4",
+   "reqd": 1
+  },
+  {
+   "fieldname": "end_time",
+   "fieldtype": "Time",
+   "in_list_view": 1,
+   "label": "\u7ed3\u675f\u65f6\u95f4",
+   "reqd": 1
+  },
+  {
+   "fieldname": "inspector",
+   "fieldtype": "Data",
+   "label": "\u5de1\u67e5\u4eba",
+   "reqd": 1
+  },
+  {
+   "fieldname": "factory",
+   "fieldtype": "Select",
+   "label": "\u5de5\u5382",
+   "options": "\u5de5\u5382A\n\u5de5\u5382B\n\u5de5\u5382C",
+   "reqd": 1
+  },
+  {
+   "fieldname": "order_number",
+   "fieldtype": "Link",
+   "label": "\u8ba2\u5355\u53f7",
+   "options": "Sales Order",
+   "reqd": 1
+  },
+  {
+   "fieldname": "product_name",
+   "fieldtype": "Data",
+   "label": "\u4ea7\u54c1\u540d\u79f0",
+   "reqd": 1
+  },
+  {
+   "fieldname": "process_stage",
+   "fieldtype": "Select",
+   "label": "\u5de5\u5e8f\u9636\u6bb5",
+   "options": "\u539f\u6750\u6599\u68c0\u9a8c\n\u751f\u4ea7\u52a0\u5de5\n\u6210\u54c1\u68c0\u9a8c\n\u5305\u88c5\u5165\u5e93",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sample_quantity",
+   "fieldtype": "Int",
+   "label": "\u62bd\u67e5\u6570\u91cf",
+   "reqd": 1
+  },
+  {
+   "fieldname": "total_quantity",
+   "fieldtype": "Int",
+   "label": "\u603b\u6570\u91cf",
+   "reqd": 1
+  },
+  {
+   "fieldname": "overall_evaluation",
+   "fieldtype": "Select",
+   "label": "\u603b\u4f53\u8bc4\u4ef7",
+   "options": "\u4f18\u79c0\n\u826f\u597d\n\u5408\u683c\n\u4e0d\u5408\u683c",
+   "reqd": 1
+  },
+  {
+   "fieldname": "recommendations",
+   "fieldtype": "Text",
+   "label": "\u5904\u7406\u5efa\u8bae"
+  },
+  {
+   "default": "\u5426",
+   "fieldname": "need_recheck",
+   "fieldtype": "Select",
+   "label": "\u662f\u5426\u9700\u8981\u590d\u68c0",
+   "options": "\u662f\n\u5426"
+  },
+  {
+   "depends_on": "eval:doc.need_recheck=='\u662f'",
+   "fieldname": "recheck_date",
+   "fieldtype": "Date",
+   "label": "\u590d\u68c0\u65e5\u671f"
+  },
+  {
+   "fieldname": "tab_patrol_points",
+   "fieldtype": "Tab Break",
+   "label": "\u5de1\u67e5\u8981\u70b9"
+  },
+  {
+   "fieldname": "column_break_pxub",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_fekk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_yhye",
+   "fieldtype": "Section Break"
+  },
+  {
+   "fieldname": "qc_patrol_problem_record",
+   "fieldtype": "Table",
+   "label": "QC Patrol Problem Record",
+   "options": "QC Patrol Problem Record"
+  },
+  {
+   "fieldname": "qc_patrol_check_item",
+   "fieldtype": "Table",
+   "label": "QC Patrol Check Item",
+   "options": "QC Patrol Check Item"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-08-27 00:58:57.743021",
+ "modified_by": "Administrator",
+ "module": "Rongguan Erp",
+ "name": "QC Patrol Record",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}

@@ -1,0 +1,66 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-08-27 00:36:48.880224",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "problem_id",
+  "description",
+  "quantity",
+  "severity",
+  "photo_attachments",
+  "section_break_hwh0"
+ ],
+ "fields": [
+  {
+   "fieldname": "problem_id",
+   "fieldtype": "Data",
+   "label": "问题记录编号",
+   "reqd": 1
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Text",
+   "label": "问题描述",
+   "reqd": 1
+  },
+  {
+   "fieldname": "quantity",
+   "fieldtype": "Int",
+   "label": "问题数量",
+   "reqd": 1
+  },
+  {
+   "fieldname": "severity",
+   "fieldtype": "Select",
+   "label": "严重程度",
+   "options": "低\n中\n高\n严重",
+   "reqd": 1
+  },
+  {
+   "fieldname": "photo_attachments",
+   "fieldtype": "Attach",
+   "label": "问题图片附件"
+  },
+  {
+   "fieldname": "section_break_hwh0",
+   "fieldtype": "Section Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-08-27 00:36:48.880224",
+ "modified_by": "Administrator",
+ "module": "Rongguan Erp",
+ "name": "QC Patrol Problem Record",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
