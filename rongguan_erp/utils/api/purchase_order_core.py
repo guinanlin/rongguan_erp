@@ -118,7 +118,7 @@ def create_subcontracting_order_from_po(purchase_order_name, supplier_warehouse=
                             subcontracting_order.supplier_warehouse = po_supplier_warehouse
                         else:
                             # 如果没有，使用默认的委外仓库
-                            subcontracting_order.supplier_warehouse = "委外仓库 - D"
+                            subcontracting_order.supplier_warehouse = "委外仓库 - R"
                 
                 print(f"DEBUG: 设置supplier_warehouse: {subcontracting_order.supplier_warehouse}")
                 
@@ -199,8 +199,8 @@ def create_subcontracting_service_purchase_order(**kwargs):
     if not kwargs.get('schedule_date'):
         kwargs['schedule_date'] = add_days(nowdate(), 7)
     
-    if not kwargs.get('warehouse'):
-        kwargs['warehouse'] = "仓库 - D"
+    # if not kwargs.get('warehouse'):
+    #     kwargs['warehouse'] = "仓库 - D"
     
     # 获取供应商名称
     if not kwargs.get('supplier_name'):
@@ -225,8 +225,8 @@ def create_subcontracting_service_purchase_order(**kwargs):
         "warehouse": kwargs['warehouse'],
         "schedule_date": kwargs['schedule_date'],
         "description": kwargs.get('description', f'{service_item_name}服务费'),
-        "expense_account": kwargs.get('expense_account', '5403 - 机械作业 - D'),
-        "cost_center": kwargs.get('cost_center', '主 - D'),
+        # "expense_account": kwargs.get('expense_account', '5403 - 机械作业 - D'),
+        # "cost_center": kwargs.get('cost_center', '主 - D'),
         # 添加成品项目信息
         "fg_item": kwargs['fg_item'],
         "fg_item_qty": kwargs.get('fg_item_qty', 1)
@@ -393,8 +393,8 @@ def create_subcontracting_service_po_from_dict(data_dict=None):
     if not data_dict.get('schedule_date'):
         data_dict['schedule_date'] = add_days(nowdate(), 7)
     
-    if not data_dict.get('warehouse'):
-        data_dict['warehouse'] = "仓库 - D"
+    # if not data_dict.get('warehouse'):
+    #     data_dict['warehouse'] = "仓库 - D"
     
     # 获取供应商名称
     if not data_dict.get('supplier_name'):
@@ -419,8 +419,8 @@ def create_subcontracting_service_po_from_dict(data_dict=None):
         "warehouse": data_dict['warehouse'],
         "schedule_date": data_dict['schedule_date'],
         "description": data_dict.get('description', f'{service_item_name}服务费'),
-        "expense_account": data_dict.get('expense_account', '5403 - 机械作业 - D'),
-        "cost_center": data_dict.get('cost_center', '主 - D'),
+        # "expense_account": data_dict.get('expense_account', '5403 - 机械作业 - D'),
+        # "cost_center": data_dict.get('cost_center', '主 - D'),
         # 添加成品项目信息
         "fg_item": data_dict['fg_item'],
         "fg_item_qty": data_dict.get('fg_item_qty', 1)
@@ -558,9 +558,9 @@ def get_subcontracting_service_info(service_item_name="委外加工"):
             "item_name": service_item_name,
             "item_group": item_doc.item_group,
             "description": item_doc.description or f"{service_item_name}服务费",
-            "default_expense_account": "5403 - 机械作业 - D",
-            "default_cost_center": "主 - D",
-            "default_warehouse": "仓库 - D",
+            # "default_expense_account": "5403 - 机械作业 - D",
+            # "default_cost_center": "主 - D",
+            # "default_warehouse": "仓库 - D",
             "stock_uom": item_doc.stock_uom,
             "is_stock_item": item_doc.is_stock_item,
             "disabled": item_doc.disabled
@@ -684,7 +684,7 @@ def create_subcontracting_order_from_purchase_order(purchase_order_name, submit=
                         subcontracting_order.supplier_warehouse = po_supplier_warehouse
                     else:
                         # 如果没有，使用默认的委外仓库
-                        subcontracting_order.supplier_warehouse = "委外仓库 - D"
+                        subcontracting_order.supplier_warehouse = "委外仓库 - R"
             
             # 现在保存
             subcontracting_order.save()
@@ -786,7 +786,7 @@ def _create_single_subcontracting_service_po_internal(kwargs):
         kwargs['schedule_date'] = add_days(nowdate(), 7)
     
     if not kwargs.get('warehouse'):
-        kwargs['warehouse'] = "仓库 - D"
+        kwargs['warehouse'] = "仓库 - R"
     
     # 获取供应商名称
     if not kwargs.get('supplier_name'):
@@ -811,8 +811,8 @@ def _create_single_subcontracting_service_po_internal(kwargs):
         "warehouse": kwargs['warehouse'],
         "schedule_date": kwargs['schedule_date'],
         "description": kwargs.get('description', f'{service_item_name}服务费'),
-        "expense_account": kwargs.get('expense_account', '5403 - 机械作业 - D'),
-        "cost_center": kwargs.get('cost_center', '主 - D'),
+        # "expense_account": kwargs.get('expense_account', '5403 - 机械作业 - D'),
+        # "cost_center": kwargs.get('cost_center', '主 - D'),
         "fg_item": kwargs['fg_item'],
         "fg_item_qty": kwargs.get('fg_item_qty', 1)
     }
