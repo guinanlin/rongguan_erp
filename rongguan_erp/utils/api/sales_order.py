@@ -46,11 +46,15 @@ def map_sales_order_to_production_order(so, items_data):
         print("Color:", color, "Size:", size)
         if not color or not size:
             frappe.throw(_("颜色或尺码属性为空，请检查销售订单数据"))
+        variant_of = item_dict.get("variant_of", "") or item_dict.get("variant_item_code", "")
+        print(f"Variant of for {item_dict.get('item_code')}: {variant_of}")
+        
         material_list.append({
             "code": item_dict.get("item_code", ""),  # Use actual item_code
             "color": color,          # 颜色
             "unit": item_dict.get("uom", ""),        # 单位
-            "sizes": {size: item_dict.get("qty", 0)}  # 尺码及数量
+            "sizes": {size: item_dict.get("qty", 0)},  # 尺码及数量
+            "variant_of": variant_of  # 使用variant_of或variant_item_code
         })
 
     # 提取第一个物料的颜色和尺码作为默认的颜色图表和尺码图表
@@ -154,10 +158,36 @@ def save_sales_order(order_data=None, *args, **kwargs):
         # 1. 批量创建商品（items）
         items = order_data.get("items", [])
         if items:
+            # 获取默认仓库
+            default_warehouse = None
+            warehouses = frappe.get_all("Warehouse", 
+                                      filters={"company": order_data.get("company")}, 
+                                      fields=["name"], 
+                                      limit=1)
+            if warehouses:
+                default_warehouse = warehouses[0].name
+                print(f"=== Debug: Found default warehouse: {default_warehouse} ===")
+            else:
+                print("=== Debug: No warehouse found for company ===")
+            
             for item in items:
                 # 确保 item 也有 doctype 和 item_group
                 item["doctype"] = "Item"
                 item["item_group"] = item.get("item_group", "Products")  # 默认值
+                
+                # 添加 Item Default 信息（解决WarehouseRequired异常）
+                if default_warehouse:
+                    # 为物料添加默认仓库设置
+                    item["item_defaults"] = [{
+                        "company": order_data.get("company"),
+                        "default_warehouse": default_warehouse
+                    }]
+                    print(f"=== Debug: Added item_defaults with warehouse {default_warehouse} to item {item.get('item_code')} ===")
+                
+                # 同时为销售订单行添加仓库信息
+                if not item.get("warehouse") and default_warehouse:
+                    item["warehouse"] = default_warehouse
+                    print(f"=== Debug: Added warehouse {default_warehouse} to item {item.get('item_code')} ===")
             try:
                 print("\n=== Debug: Calling bulk_create_items ===")
                 items_result = frappe.call(

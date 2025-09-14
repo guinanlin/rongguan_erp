@@ -258,82 +258,148 @@ def get_items_with_attributes_with_pagination(filters=None, fields=None, page_nu
 # {"item_code": "A013", "item_name": "测xx224", "message": "Item created successfully with custom item_code"}
 @frappe.whitelist()
 def create_style_number_number_by_custom_item_code(item_data):
+    print(f"=== API调用开始 ===")
+    print(f"原始输入数据类型: {type(item_data)}")
+    print(f"原始输入数据内容: {item_data}")
+    
     if isinstance(item_data, str):
+        print(f"输入是字符串，开始JSON解析...")
         try:
             item_data = json.loads(item_data)
-        except json.JSONDecodeError:
-             frappe.throw(_("Invalid JSON input."))
+            print(f"JSON解析成功，解析后数据: {item_data}")
+        except json.JSONDecodeError as e:
+            print(f"JSON解析失败: {e}")
+            frappe.throw(_("Invalid JSON input."))
 
     if not isinstance(item_data, dict):
+        print(f"输入不是字典类型: {type(item_data)}")
         frappe.throw(_("Invalid input. Expected a dictionary."))
 
     if item_data.get("doctype") != "Item":
-         frappe.throw(_("Invalid doctype specified. Must be 'Item'."))
+        print(f"doctype不是Item: {item_data.get('doctype')}")
+        frappe.throw(_("Invalid doctype specified. Must be 'Item'."))
 
     # 检查是否是变体物料
     has_variants = item_data.get("has_variants")
     variant_of = item_data.get("variant_of")
     provided_item_code = item_data.get("item_code")
     attachment_urls = item_data.get("attachment_urls", [])  # 获取多个附件 URL，默认为空列表
+    
+    print(f"=== 物料信息分析 ===")
+    print(f"has_variants: {has_variants}")
+    print(f"variant_of: {variant_of}")
+    print(f"provided_item_code: {provided_item_code}")
+    print(f"attachment_urls: {attachment_urls}")
 
     if has_variants or variant_of:  # 如果是变体相关的物料
+        print(f"=== 变体物料处理分支 ===")
         if provided_item_code:
+            print(f"使用自定义item_code: {provided_item_code}")
             try:
                 # 设置标志以禁用自动命名
                 frappe.flags.in_import = True
+                print(f"设置in_import标志为True")
                 
+                print(f"开始创建Item文档...")
                 doc = frappe.get_doc(item_data)
+                print(f"Item文档创建成功，设置自定义名称...")
                 doc.name = provided_item_code
                 doc.item_code = provided_item_code
+                print(f"开始插入Item文档...")
                 doc.insert(ignore_if_duplicate=True)
+                print(f"Item文档插入成功: {doc.name}")
                 
                 # 处理多个附件
-                for url in attachment_urls:
-                    file_doc = frappe.get_doc({
-                        "doctype": "File",
-                        "file_url": url,
-                        "attached_to_doctype": "Item",
-                        "attached_to_name": doc.name,
-                        "folder": "Home/Attachments"
-                    })
-                    file_doc.insert()
+                if attachment_urls:
+                    print(f"开始处理附件，共{len(attachment_urls)}个...")
+                    for i, url in enumerate(attachment_urls):
+                        print(f"处理第{i+1}个附件: {url}")
+                        file_doc = frappe.get_doc({
+                            "doctype": "File",
+                            "file_url": url,
+                            "attached_to_doctype": "Item",
+                            "attached_to_name": doc.name,
+                            "folder": "Home/Attachments"
+                        })
+                        file_doc.insert()
+                        print(f"附件{i+1}插入成功")
+                else:
+                    print(f"没有附件需要处理")
                 
                 # 重置标志
                 frappe.flags.in_import = False
+                print(f"重置in_import标志为False")
                 
+                print(f"开始提交数据库事务...")
                 frappe.db.commit()
-                return {
+                print(f"数据库事务提交成功")
+                
+                result = {
                     "item_code": doc.name,
                     "item_name": doc.item_name,
                     "message": _("Item created successfully with custom item_code")
                 }
+                print(f"=== 变体物料创建成功 ===")
+                print(f"返回结果: {result}")
+                return result
             except Exception as e:
+                print(f"=== 变体物料创建失败 ===")
+                print(f"错误类型: {type(e).__name__}")
+                print(f"错误信息: {str(e)}")
+                print(f"开始回滚数据库事务...")
                 frappe.db.rollback()
                 frappe.flags.in_import = False
+                print(f"数据库事务回滚完成")
                 frappe.throw(_("Failed to create Item: {0}").format(str(e)))
+        else:
+            print(f"变体物料但没有提供item_code，跳过自定义命名")
     
     # 对于非变体物料，使用默认的自动命名
-    doc = frappe.get_doc(item_data)
-    doc.insert()
-    
-    # 处理多个附件
-    for url in attachment_urls:
-        file_doc = frappe.get_doc({
-            "doctype": "File",
-            "file_url": url,
-            "attached_to_doctype": "Item",
-            "attached_to_name": doc.name,
-            "folder": "Home/Attachments"
-        })
-        file_doc.insert()
-    
-    frappe.db.commit()
-    
-    return {
-        "item_code": doc.name,
-        "item_name": doc.item_name,
-        "message": _("Item created successfully with auto-generated item_code")
-    }
+    print(f"=== 非变体物料处理分支 ===")
+    try:
+        print(f"开始创建非变体Item文档...")
+        doc = frappe.get_doc(item_data)
+        print(f"Item文档创建成功，开始插入...")
+        doc.insert()
+        print(f"Item文档插入成功: {doc.name}")
+        
+        # 处理多个附件
+        if attachment_urls:
+            print(f"开始处理附件，共{len(attachment_urls)}个...")
+            for i, url in enumerate(attachment_urls):
+                print(f"处理第{i+1}个附件: {url}")
+                file_doc = frappe.get_doc({
+                    "doctype": "File",
+                    "file_url": url,
+                    "attached_to_doctype": "Item",
+                    "attached_to_name": doc.name,
+                    "folder": "Home/Attachments"
+                })
+                file_doc.insert()
+                print(f"附件{i+1}插入成功")
+        else:
+            print(f"没有附件需要处理")
+        
+        print(f"开始提交数据库事务...")
+        frappe.db.commit()
+        print(f"数据库事务提交成功")
+        
+        result = {
+            "item_code": doc.name,
+            "item_name": doc.item_name,
+            "message": _("Item created successfully with auto-generated item_code")
+        }
+        print(f"=== 非变体物料创建成功 ===")
+        print(f"返回结果: {result}")
+        return result
+    except Exception as e:
+        print(f"=== 非变体物料创建失败 ===")
+        print(f"错误类型: {type(e).__name__}")
+        print(f"错误信息: {str(e)}")
+        print(f"开始回滚数据库事务...")
+        frappe.db.rollback()
+        print(f"数据库事务回滚完成")
+        frappe.throw(_("Failed to create Item: {0}").format(str(e)))
 
 
 @frappe.whitelist()

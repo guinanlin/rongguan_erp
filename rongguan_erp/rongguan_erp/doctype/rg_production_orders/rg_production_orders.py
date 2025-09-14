@@ -260,10 +260,10 @@ def bulk_add_items_from_data(item_data):
 				item_code = code # 直接使用 code 字段值
 				
 				# 检查 Item 是否已经存在
-				# if frappe.db.exists("Item", item_code):
-				# 	frappe.log_error(f"Item {item_code} 已存在，跳过导入。")
-				# 	print(f"Item {item_code} 已存在，跳过导入。===========")
-				# 	continue
+				if frappe.db.exists("Item", item_code):
+					frappe.log_error(f"Item {item_code} 已存在，跳过导入。")
+					print(f"Item {item_code} 已存在，跳过导入。===========")
+					continue
 				
 				# 创建新的 Item 变体，包含尺码信息
 				item_variant = {
@@ -409,7 +409,7 @@ def get_rg_production_orders(page=1, page_size=10):
                 "style_number", "product_name", "status", "order_id", 
                 "order_date", "delivery_date", "contract_number", "merchandiser", 
                 "salesperson", "pattern_number", "national_order", "factory", 
-                "image", "item", "company", "cb0", "project", "rg_color", 
+                "image", "company", "cb0", "project", "rg_color", 
                 "uom", "quantity", "rg_size", "is_active", "is_default", 
                 "allow_alternative_item", "set_rate_of_sub_assembly_item_based_on_bom", 
                 "currency_detail", "工艺路线", "amended_from", "front_picture", 
