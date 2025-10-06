@@ -97,7 +97,7 @@
    "fieldname": "process_stage",
    "fieldtype": "Select",
    "label": "\u5de5\u5e8f\u9636\u6bb5",
-   "options": "\u539f\u6750\u6599\u68c0\u9a8c\n\u751f\u4ea7\u52a0\u5de5\n\u6210\u54c1\u68c0\u9a8c\n\u5305\u88c5\u5165\u5e93",
+   "options": "\u4ea7\u524d\u6837\n\u524d\u671f\n\u4e2d\u671f\n\u5c3e\u671f",
    "reqd": 1
   },
   {
@@ -170,7 +170,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-09-10 10:57:05.445558",
+ "modified": "2025-10-06 22:42:06.191725",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "QC Patrol Record",

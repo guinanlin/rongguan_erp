@@ -1,0 +1,240 @@
+{
+ "actions": [],
+ "allow_import": 1,
+ "allow_rename": 1,
+ "autoname": "hash",
+ "creation": "2025-10-06 22:48:11.030738",
+ "default_view": "List",
+ "doctype": "DocType",
+ "document_type": "Document",
+ "engine": "InnoDB",
+ "field_order": [
+  "naming_series",
+  "section_break_basic_info",
+  "customer",
+  "style",
+  "style_number",
+  "sales_order",
+  "work_order",
+  "column_break_basic_info",
+  "posting_date",
+  "posting_time",
+  "status",
+  "column_break_status",
+  "total_order_quantity",
+  "total_cut_quantity",
+  "cutting_progress",
+  "section_break_cutting_data",
+  "cutting_data",
+  "section_break_additional_info",
+  "remarks",
+  "column_break_additional",
+  "created_by"
+ ],
+ "fields": [
+  {
+   "default": "RG-CWR-.YYYY.-.#####",
+   "fieldname": "naming_series",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "\u547d\u540d\u89c4\u5219",
+   "options": "RG-CWR-.YYYY.-.#####",
+   "read_only": 1,
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_basic_info",
+   "fieldtype": "Section Break",
+   "label": "\u57fa\u672c\u4fe1\u606f"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u5ba2\u6237",
+   "options": "Customer",
+   "reqd": 1
+  },
+  {
+   "fieldname": "style",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u6b3e\u5f0f",
+   "reqd": 1
+  },
+  {
+   "fieldname": "style_number",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u6b3e\u53f7",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sales_order",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "\u9500\u552e\u8ba2\u5355",
+   "options": "Sales Order"
+  },
+  {
+   "fieldname": "work_order",
+   "fieldtype": "Link",
+   "label": "\u751f\u4ea7\u8ba2\u5355",
+   "options": "Work Order"
+  },
+  {
+   "fieldname": "column_break_basic_info",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "Today",
+   "fieldname": "posting_date",
+   "fieldtype": "Date",
+   "in_list_view": 1,
+   "label": "\u62a5\u5de5\u65e5\u671f",
+   "reqd": 1
+  },
+  {
+   "default": "now",
+   "fieldname": "posting_time",
+   "fieldtype": "Time",
+   "label": "\u62a5\u5de5\u65f6\u95f4"
+  },
+  {
+   "default": "\u8349\u7a3f",
+   "fieldname": "status",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "\u72b6\u6001",
+   "options": "\u8349\u7a3f\n\u5df2\u63d0\u4ea4\n\u5df2\u5b8c\u6210\n\u5df2\u53d6\u6d88",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_status",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_order_quantity",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "\u603b\u8ba2\u5355\u6570\u91cf",
+   "precision": "0",
+   "read_only": 1
+  },
+  {
+   "fieldname": "total_cut_quantity",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "\u603b\u88c1\u526a\u6570\u91cf",
+   "precision": "0",
+   "read_only": 1
+  },
+  {
+   "fieldname": "cutting_progress",
+   "fieldtype": "Percent",
+   "in_list_view": 1,
+   "label": "\u88c1\u526a\u8fdb\u5ea6",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "section_break_cutting_data",
+   "fieldtype": "Section Break",
+   "label": "\u88c1\u526a\u6570\u636e"
+  },
+  {
+   "description": "\u5b58\u50a8\u989c\u8272-\u5c3a\u7801\u7684\u88c1\u526a\u6570\u636e\uff0c\u5305\u62ec\u8ba2\u5355\u6570\u91cf\u3001\u88c1\u526a\u6570\u91cf\u3001\u6346\u5305\u53f7\u3001\u9762\u6599\u6279\u6b21\u7b49\u4fe1\u606f",
+   "fieldname": "cutting_data",
+   "fieldtype": "JSON",
+   "label": "\u88c1\u526a\u6570\u636e",
+   "reqd": 1
+  },
+  {
+   "fieldname": "section_break_additional_info",
+   "fieldtype": "Section Break",
+   "label": "\u5176\u4ed6\u4fe1\u606f"
+  },
+  {
+   "description": "\u8bb0\u5f55\u88c1\u526a\u8fc7\u7a0b\u4e2d\u7684\u7279\u6b8a\u8bf4\u660e\u6216\u6ce8\u610f\u4e8b\u9879",
+   "fieldname": "remarks",
+   "fieldtype": "Text",
+   "label": "\u5907\u6ce8"
+  },
+  {
+   "fieldname": "column_break_additional",
+   "fieldtype": "Column Break"
+  },
+  {
+   "default": "user",
+   "fieldname": "created_by",
+   "fieldtype": "Link",
+   "label": "\u521b\u5efa\u4eba",
+   "options": "User",
+   "read_only": 1
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-10-06 23:10:27.119044",
+ "modified_by": "Administrator",
+ "module": "Rongguan Erp",
+ "name": "RG Cutting Work Report",
+ "naming_rule": "Random",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  },
+  {
+   "create": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "Manufacturing User",
+   "write": 1
+  },
+  {
+   "read": 1,
+   "role": "Manufacturing Manager"
+  }
+ ],
+ "quick_entry": 1,
+ "route": "rg-cutting-work-report",
+ "row_format": "Dynamic",
+ "show_name_in_global_search": 1,
+ "show_preview_popup": 1,
+ "sort_field": "creation",
+ "sort_order": "DESC",
+ "states": [
+  {
+   "color": "Blue",
+   "title": "\u8349\u7a3f"
+  },
+  {
+   "color": "Blue",
+   "title": "\u5df2\u63d0\u4ea4"
+  },
+  {
+   "color": "Blue",
+   "title": "\u5df2\u5b8c\u6210"
+  },
+  {
+   "color": "Blue",
+   "title": "\u5df2\u53d6\u6d88"
+  }
+ ],
+ "title_field": "style",
+ "track_changes": 1,
+ "track_views": 1
+}

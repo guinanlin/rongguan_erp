@@ -785,8 +785,8 @@ def _create_single_subcontracting_service_po_internal(kwargs):
     if not kwargs.get('schedule_date'):
         kwargs['schedule_date'] = add_days(nowdate(), 7)
     
-    if not kwargs.get('warehouse'):
-        kwargs['warehouse'] = "仓库 - R"
+    # if not kwargs.get('warehouse'):
+    #     kwargs['warehouse'] = "委外加工的仓库是必须输入的"
     
     # 获取供应商名称
     if not kwargs.get('supplier_name'):
@@ -808,7 +808,7 @@ def _create_single_subcontracting_service_po_internal(kwargs):
         "item_name": service_item_name,
         "qty": kwargs['qty'],
         "rate": kwargs['rate'],
-        "warehouse": kwargs['warehouse'],
+        # "warehouse": kwargs['warehouse'],
         "schedule_date": kwargs['schedule_date'],
         "description": kwargs.get('description', f'{service_item_name}服务费'),
         # "expense_account": kwargs.get('expense_account', '5403 - 机械作业 - D'),
