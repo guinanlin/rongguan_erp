@@ -101,7 +101,7 @@
    "fieldname": "sample_type",
    "fieldtype": "Select",
    "label": "\u6837\u8863\u7c7b\u578b",
-   "options": "1\u70b9\u6837\n2\u70b9\u6837\n3\u70b9\u6837\nPP\u6837\n\u9500\u552e\u6837\n\u5e7f\u544a\u6837"
+   "options": "1\u70b9\u6837\n2\u70b9\u6837\n3\u70b9\u6837\nPP\u6837\n\u9500\u552e\u6837\n\u5e7f\u544a\u6837\n\u8df3\u7801\u6837\n\u53c2\u8003\u6837\n\u7167\u7247\u6837\n\u8239\u6837"
   },
   {
    "fieldname": "category",
@@ -113,7 +113,7 @@
    "fieldname": "sample_grade",
    "fieldtype": "Select",
    "label": "\u6837\u8863\u7b49\u7ea7",
-   "options": "A\u7ea7\nB\u7ea7\nC\u7ea7"
+   "options": "\u7d27\u6025\n\u4e00\u822c"
   },
   {
    "fieldname": "year",
@@ -176,7 +176,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-07-03 01:02:05.202551",
+ "modified": "2025-10-08 00:06:36.479924",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "RG Pattern",
