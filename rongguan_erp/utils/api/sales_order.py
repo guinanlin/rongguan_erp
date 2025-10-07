@@ -737,6 +737,7 @@ def get_sales_order_bom_docs(*args, **kwargs):
             result["items"].append({
                 "item_row_name": row.name,
                 "bom_no": row.bom_no,
+                "custom_updated_bom_no": row.custom_updated_bom_no,
                 "bom_doc": enhanced_bom_doc,              # 使用增强版的 BOM Doc
                 "bom_item_doc": item_doc.as_dict()         # BOM 对应物料的完整 Doc
             })
