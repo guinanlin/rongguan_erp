@@ -67,6 +67,7 @@ def map_sales_order_to_production_order(so, items_data):
     sub_order_type_mapping = {
         "样衣销售合同": "样衣",  # 样衣销售合同对应生产订单的样衣类型
         "大货销售合同": "大货",  # 大货销售合同对应生产订单的大货类型
+        "销售样销售合同": "销售样",  # 销售样销售合同对应生产订单的销售样类型
     }
     production_order_type = sub_order_type_mapping.get(so.custom_sub_order_type, "大货") # 默认映射为"大货"
 
