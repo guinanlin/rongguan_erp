@@ -13,6 +13,8 @@
   "style_name",
   "style_code",
   "customer",
+  "pattern_maker",
+  "pattern_maker_name",
   "material_usages",
   "fabric_images",
   "lining_images",
@@ -119,13 +121,27 @@
    "fieldtype": "Link",
    "label": "pattern number",
    "options": "RG Pattern"
+  },
+  {
+   "fieldname": "pattern_maker",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "Pattern Maker",
+   "options": "Employee"
+  },
+  {
+   "fetch_from": "pattern_maker.employee_name",
+   "fieldname": "pattern_maker_name",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Pattern Maker Name"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-08-07 06:30:08.751911",
+ "modified": "2025-10-14 01:12:36.200801",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "RG Paper Pattern",

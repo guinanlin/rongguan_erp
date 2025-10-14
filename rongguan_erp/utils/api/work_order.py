@@ -996,6 +996,14 @@ def get_work_order_list(page=1, page_size=20, filters=None, order_by=None, field
                     sub_tables['assignments'] = []
                     frappe.log_error(f"获取工单 {work_order.name} 分配信息失败: {str(assignment_error)}")
                 
+                # 通过work order 的custom_sales_order字段获取对应的纸样单，然后获取纸样单的的纸样师的信息
+                try:
+                    paper_pattern_doc = frappe.get_doc("RG Paper Pattern", work_order.custom_sales_order)
+                    sub_tables['paper_pattern'] = paper_pattern_doc.as_dict()
+                except Exception as paper_pattern_error:
+                    sub_tables['paper_pattern'] = []
+                    frappe.log_error(f"获取工单 {work_order.name} 纸样单信息失败: {str(paper_pattern_error)}")
+                    
                 # 获取Job Card明细
                 try:
                     job_cards = frappe.get_all(
