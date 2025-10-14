@@ -1,0 +1,229 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-10-14 14:15:04.309435",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "item_type",
+  "sequence",
+  "material_section",
+  "material_code",
+  "supplier",
+  "name1",
+  "column_break_material1",
+  "color",
+  "property",
+  "price_consumption_section",
+  "unit_price",
+  "net_consumption",
+  "loss_rate",
+  "column_break_price1",
+  "total_consumption",
+  "amount",
+  "fabric_specific_section",
+  "weight",
+  "width",
+  "accessory_specific_section",
+  "unit",
+  "process_specific_section",
+  "position",
+  "production_specific_section",
+  "description",
+  "difficulty_point",
+  "column_break_production1",
+  "quantity",
+  "work_hours"
+ ],
+ "fields": [
+  {
+   "fieldname": "item_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "明细类型",
+   "options": "fabric\naccessory\nprocess\nproduction",
+   "reqd": 1
+  },
+  {
+   "fieldname": "sequence",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "序号",
+   "reqd": 1
+  },
+  {
+   "fieldname": "material_section",
+   "fieldtype": "Section Break",
+   "label": "物料信息"
+  },
+  {
+   "fieldname": "material_code",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "物料编码",
+   "length": 50
+  },
+  {
+   "fieldname": "supplier",
+   "fieldtype": "Link",
+   "in_list_view": 1,
+   "label": "供应商/费用名称",
+   "options": "Supplier"
+  },
+  {
+   "fieldname": "name1",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "物料名称",
+   "length": 100
+  },
+  {
+   "fieldname": "column_break_material1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "color",
+   "fieldtype": "Data",
+   "label": "颜色",
+   "length": 50
+  },
+  {
+   "fieldname": "property",
+   "fieldtype": "Data",
+   "label": "特性/属性",
+   "length": 100
+  },
+  {
+   "fieldname": "price_consumption_section",
+   "fieldtype": "Section Break",
+   "label": "价格与消耗"
+  },
+  {
+   "fieldname": "unit_price",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "含税单价",
+   "precision": "2"
+  },
+  {
+   "fieldname": "net_consumption",
+   "fieldtype": "Float",
+   "label": "净耗",
+   "precision": "4"
+  },
+  {
+   "fieldname": "loss_rate",
+   "fieldtype": "Float",
+   "label": "损耗率(%)",
+   "precision": "2"
+  },
+  {
+   "fieldname": "column_break_price1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "total_consumption",
+   "fieldtype": "Float",
+   "label": "总耗",
+   "precision": "4",
+   "read_only": 1
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "金额",
+   "precision": "2",
+   "read_only": 1
+  },
+  {
+   "fieldname": "fabric_specific_section",
+   "fieldtype": "Section Break",
+   "label": "面料专属字段",
+   "depends_on": "eval:doc.item_type=='fabric'"
+  },
+  {
+   "fieldname": "weight",
+   "fieldtype": "Data",
+   "label": "克重(g)",
+   "length": 50
+  },
+  {
+   "fieldname": "width",
+   "fieldtype": "Data",
+   "label": "门幅",
+   "length": 50
+  },
+  {
+   "fieldname": "accessory_specific_section",
+   "fieldtype": "Section Break",
+   "label": "辅料专属字段",
+   "depends_on": "eval:doc.item_type=='accessory'"
+  },
+  {
+   "fieldname": "unit",
+   "fieldtype": "Link",
+   "label": "单位",
+   "options": "UOM"
+  },
+  {
+   "fieldname": "process_specific_section",
+   "fieldtype": "Section Break",
+   "label": "工艺专属字段",
+   "depends_on": "eval:doc.item_type=='process'"
+  },
+  {
+   "fieldname": "position",
+   "fieldtype": "Data",
+   "label": "工艺位置",
+   "length": 100
+  },
+  {
+   "fieldname": "production_specific_section",
+   "fieldtype": "Section Break",
+   "label": "生产成本专属字段",
+   "depends_on": "eval:doc.item_type=='production'"
+  },
+  {
+   "fieldname": "description",
+   "fieldtype": "Small Text",
+   "label": "费用说明"
+  },
+  {
+   "fieldname": "difficulty_point",
+   "fieldtype": "Small Text",
+   "label": "此款工艺难点"
+  },
+  {
+   "fieldname": "column_break_production1",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "quantity",
+   "fieldtype": "Float",
+   "label": "单件数量",
+   "precision": "2"
+  },
+  {
+   "fieldname": "work_hours",
+   "fieldtype": "Float",
+   "label": "工时",
+   "precision": "2"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-10-14 14:15:04.309435",
+ "modified_by": "Administrator",
+ "module": "Rongguan Erp",
+ "name": "Rg Cost Calculation Items",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
