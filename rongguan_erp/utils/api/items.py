@@ -39,22 +39,55 @@ def get_items_with_attributes(filters=None, fields=None, or_filters=None, order_
 # bench --site site1.local execute rongguan_erp.utils.api.items.get_items_attribute_with_value --kwargs '{"filters": {"item_group": "成品"}}'
 @frappe.whitelist(allow_guest=False)  # 确保只允许认证用户访问
 def get_items_attribute_with_value(filters=None, fields=None):
+    """
+    获取 Item Attribute Value 及其父表 Item Attribute 的信息（包括 _user_tags）
+    """
     if not filters:
         filters = {}
     
+    # 查询 Item Attribute Value（子表）
+    # 需要获取 parent 字段以便关联父表
     items = frappe.get_all(
         'Item Attribute Value',
         filters=filters,
-        fields=fields or ["*"],
-        pluck='name'
+        fields=['name', 'attribute_value', 'abbr', 'parent', 'idx']
     )
-
+    
     result = []
+    # 缓存父表数据，避免重复查询同一个 Item Attribute
+    parent_cache = {}
+    
     for item in items:
-        doc = frappe.get_doc('Item Attribute Value', item)
-        data = doc.as_dict()
+        # 获取 Item Attribute Value 的完整数据
+        value_doc = frappe.get_doc('Item Attribute Value', item['name'])
+        data = value_doc.as_dict()
+        
+        # 获取父表 Item Attribute 的信息
+        parent_name = item.get('parent')
+        if parent_name:
+            if parent_name not in parent_cache:
+                # 查询父表，包括 _user_tags 字段
+                parent_doc = frappe.get_doc('Item Attribute', parent_name)
+                user_tags = parent_doc.get('_user_tags') or ''
+                
+                # 根据 _user_tags 判断是否为尺寸或颜色
+                is_size = 1 if '尺寸' in user_tags else 0
+                is_color = 1 if '颜色' in user_tags else 0
+                
+                parent_cache[parent_name] = {
+                    'attribute_name': parent_doc.attribute_name,
+                    'numeric_values': parent_doc.numeric_values,
+                    'disabled': parent_doc.disabled,
+                    '_user_tags': user_tags,
+                    'is_size': is_size,
+                    'is_color': is_color,
+                }
+            
+            # 将父表信息添加到返回数据中
+            data['item_attribute'] = parent_cache[parent_name]
+        
         result.append(data)
-
+    
     return result
 
 # bench --site site1.local execute rongguan_erp.utils.api.items.get_items_by_item_group --kwargs '{"item_group_name": "成品"}'
