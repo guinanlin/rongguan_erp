@@ -54,6 +54,9 @@
   "column_break_cost2",
   "fob_price",
   "fob_usd_price",
+  "final_price",
+  "price_tiers_section",
+  "price_tiers",
   "approval_section",
   "status",
   "creator",
@@ -67,68 +70,70 @@
   {
    "fieldname": "naming_series",
    "fieldtype": "Select",
-   "label": "编号系列",
+   "in_list_view": 1,
+   "label": "\u7f16\u53f7\u7cfb\u5217",
    "options": "COST-.YYYY.-",
    "reqd": 1
   },
   {
    "fieldname": "basic_info_section",
    "fieldtype": "Section Break",
-   "label": "基本信息"
+   "label": "\u57fa\u672c\u4fe1\u606f"
   },
   {
    "fieldname": "season",
    "fieldtype": "Data",
-   "label": "季节",
+   "label": "\u5b63\u8282",
    "length": 50
   },
   {
    "fieldname": "customer",
    "fieldtype": "Link",
-   "label": "客户",
+   "label": "\u5ba2\u6237",
    "options": "Customer",
    "search_index": 1
   },
   {
    "fieldname": "contract_no",
    "fieldtype": "Data",
-   "label": "合同编号",
+   "label": "\u5408\u540c\u7f16\u53f7",
    "length": 50,
    "search_index": 1
   },
   {
    "fieldname": "contract_date",
    "fieldtype": "Date",
-   "label": "合同日期"
+   "label": "\u5408\u540c\u65e5\u671f"
   },
   {
    "fieldname": "column_break_basic1",
    "fieldtype": "Column Break"
   },
   {
+   "default": "\u751f\u4ea7\u52a0\u5de5\u578b",
    "fieldname": "order_mode",
    "fieldtype": "Data",
-   "default": "生产加工型",
-   "label": "订单模式",
+   "label": "\u8ba2\u5355\u6a21\u5f0f",
    "length": 50
   },
   {
    "fieldname": "production_type",
    "fieldtype": "Data",
-   "label": "生产类型",
+   "label": "\u751f\u4ea7\u7c7b\u578b",
    "length": 50
   },
   {
    "fieldname": "style",
    "fieldtype": "Data",
-   "label": "款式",
+   "label": "\u6b3e\u5f0f",
    "length": 100,
    "search_index": 1
   },
   {
    "fieldname": "style_number",
    "fieldtype": "Data",
-   "label": "款号",
+   "in_list_view": 1,
+   "label": "\u6b3e\u53f7",
    "length": 50,
    "reqd": 1,
    "search_index": 1
@@ -140,24 +145,24 @@
   {
    "fieldname": "confirm_date",
    "fieldtype": "Date",
-   "label": "确认报价日期"
+   "label": "\u786e\u8ba4\u62a5\u4ef7\u65e5\u671f"
   },
   {
    "fieldname": "final_customer_price",
    "fieldtype": "Data",
-   "label": "最终客户确认价",
+   "label": "\u6700\u7ec8\u5ba2\u6237\u786e\u8ba4\u4ef7",
    "length": 50
   },
   {
    "fieldname": "size_range",
    "fieldtype": "Data",
-   "label": "尺码范围",
+   "label": "\u5c3a\u7801\u8303\u56f4",
    "length": 100
   },
   {
    "fieldname": "color_info",
    "fieldtype": "Data",
-   "label": "颜色信息",
+   "label": "\u989c\u8272\u4fe1\u606f",
    "length": 100
   },
   {
@@ -167,24 +172,24 @@
   {
    "fieldname": "has_customer_paper",
    "fieldtype": "Select",
-   "label": "有无客供纸样",
-   "options": "\n有\n无"
+   "label": "\u6709\u65e0\u5ba2\u4f9b\u7eb8\u6837",
+   "options": "\n\u6709\n\u65e0"
   },
   {
    "fieldname": "paper_value",
    "fieldtype": "Data",
-   "label": "纸样价值",
+   "label": "\u7eb8\u6837\u4ef7\u503c",
    "length": 50
   },
   {
    "fieldname": "first_order_quantity",
    "fieldtype": "Int",
-   "label": "首单数量"
+   "label": "\u9996\u5355\u6570\u91cf"
   },
   {
    "fieldname": "paper_sample_maker",
    "fieldtype": "Data",
-   "label": "纸样师",
+   "label": "\u7eb8\u6837\u5e08",
    "length": 50
   },
   {
@@ -194,42 +199,44 @@
   {
    "fieldname": "style_image_url",
    "fieldtype": "Attach Image",
-   "label": "款式图片"
+   "label": "\u6b3e\u5f0f\u56fe\u7247"
   },
   {
+   "default": "CNY",
    "fieldname": "currency",
    "fieldtype": "Link",
-   "default": "CNY",
-   "label": "币种",
+   "label": "\u5e01\u79cd",
    "options": "Currency"
   },
   {
    "fieldname": "version_section",
    "fieldtype": "Section Break",
-   "label": "版本管理"
+   "label": "\u7248\u672c\u7ba1\u7406"
   },
   {
    "fieldname": "business_key",
    "fieldtype": "Data",
-   "label": "业务主键",
+   "in_list_view": 1,
+   "label": "\u4e1a\u52a1\u4e3b\u952e",
    "length": 100,
    "read_only": 1,
    "reqd": 1,
    "search_index": 1
   },
   {
+   "default": "1",
    "fieldname": "version_no",
    "fieldtype": "Int",
-   "default": "1",
-   "label": "版本号",
+   "in_list_view": 1,
+   "label": "\u7248\u672c\u53f7",
    "read_only": 1,
    "reqd": 1
   },
   {
+   "default": "1",
    "fieldname": "is_latest_version",
    "fieldtype": "Check",
-   "default": "1",
-   "label": "是否最新版本",
+   "label": "\u662f\u5426\u6700\u65b0\u7248\u672c",
    "read_only": 1,
    "search_index": 1
   },
@@ -240,7 +247,7 @@
   {
    "fieldname": "parent_version_id",
    "fieldtype": "Data",
-   "label": "父版本ID",
+   "label": "\u7236\u7248\u672cID",
    "length": 140,
    "read_only": 1,
    "search_index": 1
@@ -248,78 +255,78 @@
   {
    "fieldname": "version_remark",
    "fieldtype": "Small Text",
-   "label": "版本说明"
+   "label": "\u7248\u672c\u8bf4\u660e"
   },
   {
    "fieldname": "cost_items_section",
    "fieldtype": "Section Break",
-   "label": "成本明细"
+   "label": "\u6210\u672c\u660e\u7ec6"
   },
   {
+   "description": "item_type = fabric",
    "fieldname": "fabric_items",
    "fieldtype": "Table",
-   "label": "面料明细",
-   "options": "Rg Cost Calculation Items",
-   "description": "item_type = fabric"
+   "label": "\u9762\u6599\u660e\u7ec6",
+   "options": "Rg Cost Calculation Items"
   },
   {
+   "description": "item_type = accessory",
    "fieldname": "accessory_items",
    "fieldtype": "Table",
-   "label": "辅料明细",
-   "options": "Rg Cost Calculation Items",
-   "description": "item_type = accessory"
+   "label": "\u8f85\u6599\u660e\u7ec6",
+   "options": "Rg Cost Calculation Items"
   },
   {
+   "description": "item_type = process",
    "fieldname": "process_items",
    "fieldtype": "Table",
-   "label": "特殊工艺明细",
-   "options": "Rg Cost Calculation Items",
-   "description": "item_type = process"
+   "label": "\u7279\u6b8a\u5de5\u827a\u660e\u7ec6",
+   "options": "Rg Cost Calculation Items"
   },
   {
+   "description": "item_type = production",
    "fieldname": "production_items",
    "fieldtype": "Table",
-   "label": "生产其他成本明细",
-   "options": "Rg Cost Calculation Items",
-   "description": "item_type = production"
+   "label": "\u751f\u4ea7\u5176\u4ed6\u6210\u672c\u660e\u7ec6",
+   "options": "Rg Cost Calculation Items"
   },
   {
    "fieldname": "cost_summary_section",
    "fieldtype": "Section Break",
-   "label": "成本汇总"
+   "label": "\u6210\u672c\u6c47\u603b"
   },
   {
+   "default": "0",
    "fieldname": "fabric_cost",
    "fieldtype": "Currency",
-   "default": "0",
-   "label": "面料总成本",
+   "label": "\u9762\u6599\u603b\u6210\u672c",
    "precision": "2",
    "read_only": 1,
    "reqd": 1
   },
   {
+   "default": "0",
    "fieldname": "accessory_cost",
    "fieldtype": "Currency",
-   "default": "0",
-   "label": "辅料总成本",
+   "label": "\u8f85\u6599\u603b\u6210\u672c",
    "precision": "2",
    "read_only": 1,
    "reqd": 1
   },
   {
+   "default": "0",
    "fieldname": "process_cost",
    "fieldtype": "Currency",
-   "default": "0",
-   "label": "特殊工艺总成本",
+   "label": "\u7279\u6b8a\u5de5\u827a\u603b\u6210\u672c",
    "precision": "2",
    "read_only": 1,
    "reqd": 1
   },
   {
+   "default": "0",
    "fieldname": "production_cost",
    "fieldtype": "Currency",
-   "default": "0",
-   "label": "生产其他成本",
+   "label": "\u751f\u4ea7\u5176\u4ed6\u6210\u672c",
    "precision": "2",
    "read_only": 1,
    "reqd": 1
@@ -329,27 +336,27 @@
    "fieldtype": "Column Break"
   },
   {
+   "default": "0",
    "fieldname": "total_production_cost",
    "fieldtype": "Currency",
-   "default": "0",
-   "label": "生产总成本",
+   "label": "\u751f\u4ea7\u603b\u6210\u672c",
    "precision": "2",
    "read_only": 1,
    "reqd": 1
   },
   {
+   "default": "15",
    "fieldname": "profit_percentage",
    "fieldtype": "Float",
-   "default": "15",
-   "label": "利润百分比(%)",
+   "label": "\u5229\u6da6\u767e\u5206\u6bd4(%)",
    "precision": "2",
    "reqd": 1
   },
   {
+   "default": "0",
    "fieldname": "profit_amount",
    "fieldtype": "Currency",
-   "default": "0",
-   "label": "利润金额",
+   "label": "\u5229\u6da6\u91d1\u989d",
    "precision": "2",
    "read_only": 1,
    "reqd": 1
@@ -359,10 +366,10 @@
    "fieldtype": "Column Break"
   },
   {
+   "default": "0",
    "fieldname": "fob_price",
    "fieldtype": "Currency",
-   "default": "0",
-   "label": "FOB总价",
+   "label": "FOB\u603b\u4ef7",
    "precision": "2",
    "read_only": 1,
    "reqd": 1
@@ -370,19 +377,19 @@
   {
    "fieldname": "fob_usd_price",
    "fieldtype": "Data",
-   "label": "FOB美金价格",
+   "label": "FOB\u7f8e\u91d1\u4ef7\u683c",
    "length": 50
   },
   {
    "fieldname": "approval_section",
    "fieldtype": "Section Break",
-   "label": "审批流程"
+   "label": "\u5ba1\u6279\u6d41\u7a0b"
   },
   {
+   "default": "draft",
    "fieldname": "status",
    "fieldtype": "Select",
-   "default": "draft",
-   "label": "状态",
+   "label": "\u72b6\u6001",
    "options": "draft\npending\napproved\nrejected",
    "reqd": 1,
    "search_index": 1
@@ -390,7 +397,7 @@
   {
    "fieldname": "creator",
    "fieldtype": "Link",
-   "label": "制表人",
+   "label": "\u5236\u8868\u4eba",
    "options": "User",
    "search_index": 1
   },
@@ -401,13 +408,13 @@
   {
    "fieldname": "reviewer",
    "fieldtype": "Link",
-   "label": "审核人",
+   "label": "\u5ba1\u6838\u4eba",
    "options": "User"
   },
   {
    "fieldname": "approver",
    "fieldtype": "Link",
-   "label": "审批人",
+   "label": "\u5ba1\u6279\u4eba",
    "options": "User"
   },
   {
@@ -423,13 +430,31 @@
    "print_hide": 1,
    "read_only": 1,
    "search_index": 1
+  },
+  {
+   "fieldname": "final_price",
+   "fieldtype": "Data",
+   "label": "Final Price",
+   "length": 50
+  },
+  {
+   "fieldname": "price_tiers_section",
+   "fieldtype": "Section Break",
+   "label": "\u9636\u68af\u5b9a\u4ef7"
+  },
+  {
+   "fieldname": "price_tiers",
+   "fieldtype": "Table",
+   "label": "\u4ef7\u683c\u533a\u95f4",
+   "options": "Rg Cost Calculation Price Tiers",
+   "description": "\u6839\u636e\u8ba2\u5355\u6570\u91cf\u8bbe\u7f6e\u4e0d\u540c\u4ef7\u683c\u6863\u4f4d"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-10-14 14:14:16.638254",
+ "modified": "2025-10-22 17:33:30.009073",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "Rg Cost Calculations",

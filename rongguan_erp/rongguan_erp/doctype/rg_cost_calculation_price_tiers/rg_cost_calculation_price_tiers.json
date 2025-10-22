@@ -1,0 +1,58 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-10-22 23:00:30.321883",
+ "doctype": "DocType",
+ "editable_grid": 1,
+ "engine": "InnoDB",
+ "field_order": [
+  "sequence",
+  "tier_label",
+  "price",
+  "remark"
+ ],
+ "fields": [
+  {
+   "fieldname": "sequence",
+   "fieldtype": "Int",
+   "in_list_view": 1,
+   "label": "\u5e8f\u53f7",
+   "reqd": 1
+  },
+  {
+   "fieldname": "tier_label",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u533a\u95f4\u63cf\u8ff0",
+   "length": 100,
+   "reqd": 1
+  },
+  {
+   "fieldname": "price",
+   "fieldtype": "Currency",
+   "in_list_view": 1,
+   "label": "\u5355\u4ef7",
+   "precision": "2",
+   "reqd": 1
+  },
+  {
+   "fieldname": "remark",
+   "fieldtype": "Small Text",
+   "label": "\u5907\u6ce8"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "istable": 1,
+ "links": [],
+ "modified": "2025-10-22 23:00:30.321883",
+ "modified_by": "Administrator",
+ "module": "Rongguan Erp",
+ "name": "Rg Cost Calculation Price Tiers",
+ "owner": "Administrator",
+ "permissions": [],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
