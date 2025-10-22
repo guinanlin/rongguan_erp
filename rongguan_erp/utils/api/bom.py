@@ -457,6 +457,198 @@ bench --site site1.local execute rongguan_erp.utils.api.bom.create_new_bom_versi
 
 
 @frappe.whitelist()
+def get_bom_info_by_so(**args):
+    """
+    根据销售订单号、成品颜色、物料编码，查询该物料在符合条件的BOM中的平均用量
+    
+    Args:
+        **args: 关键字参数
+            sales_order (str): 销售订单号（必填）
+            product_color (str): 成品颜色（可选，如：灰色）
+            material_item_code (str): 物料编码（必填）
+    
+    Returns:
+        dict: {
+            "status": "success|error",
+            "message": "操作结果描述",
+            "data": {
+                "sales_order": "销售订单号",
+                "product_color": "灰色",
+                "material_item_code": "RM-001",
+                "material_item_name": "面料A",
+                "bom_count": 3,
+                "total_qty": 7.5,
+                "avg_qty": 2.5,
+                "bom_details": [
+                    {
+                        "bom_no": "BOM-A2601005-灰色-F-014",
+                        "product_item_code": "A2601005-灰色-F",
+                        "material_qty": 2.5
+                    }
+                ]
+            }
+        }
+    
+    Example:
+        # 查询某物料在销售订单中的平均用量
+        result = frappe.call(
+            "rongguan_erp.utils.api.bom.get_bom_info_by_so",
+            sales_order="SAL-ORD-2025-00049",
+            material_item_code="RM-001"
+        )
+        
+        # 查询某物料在指定颜色的BOM中的平均用量
+        result = frappe.call(
+            "rongguan_erp.utils.api.bom.get_bom_info_by_so",
+            sales_order="SAL-ORD-2025-00049",
+            product_color="灰色",
+            material_item_code="RM-001"
+        )
+    """
+    try:
+        # 1. 获取参数
+        sales_order = args.get('sales_order')
+        product_color = args.get('product_color')
+        material_item_code = args.get('material_item_code')
+        
+        # 2. 参数验证
+        if not sales_order:
+            return {
+                "status": "error",
+                "message": "销售订单号(sales_order)不能为空"
+            }
+        
+        if not material_item_code:
+            return {
+                "status": "error",
+                "message": "物料编码(material_item_code)不能为空"
+            }
+        
+        # 3. 检查销售订单是否存在
+        if not frappe.db.exists("Sales Order", sales_order):
+            return {
+                "status": "error",
+                "message": f"销售订单 {sales_order} 不存在"
+            }
+        
+        # 4. 查询销售订单明细的更新后BOM编号、物料号和颜色
+        # 通过Item Attribute的_user_tags字段判断哪个属性是颜色属性
+        sql_params = {"sales_order": sales_order}
+        color_filter = ""
+        
+        if product_color:
+            color_filter = """
+                AND (
+                    SELECT iva.attribute_value
+                    FROM `tabItem Variant Attribute` iva
+                    INNER JOIN `tabItem Attribute` ia ON ia.name = iva.attribute
+                    WHERE iva.parent = soi.item_code
+                        AND ia._user_tags LIKE '%%颜色%%'
+                    LIMIT 1
+                ) = %(product_color)s
+            """
+            sql_params["product_color"] = product_color
+        
+        bom_items = frappe.db.sql(f"""
+            SELECT 
+                soi.custom_updated_bom_no as updated_bom,
+                soi.item_code,
+                (
+                    SELECT iva.attribute_value
+                    FROM `tabItem Variant Attribute` iva
+                    INNER JOIN `tabItem Attribute` ia ON ia.name = iva.attribute
+                    WHERE iva.parent = soi.item_code
+                        AND ia._user_tags LIKE '%%颜色%%'
+                    LIMIT 1
+                ) as color
+            FROM `tabSales Order Item` soi
+            WHERE soi.parent = %(sales_order)s
+                AND soi.custom_updated_bom_no IS NOT NULL
+                AND soi.custom_updated_bom_no != ''
+                {color_filter}
+            ORDER BY soi.idx
+        """, sql_params, as_dict=True)
+        
+        if not bom_items:
+            return {
+                "status": "warning",
+                "message": f"销售订单 {sales_order} 没有符合条件的BOM"
+            }
+        
+        # 5. 在这些BOM中查找指定的物料，并收集用量
+        bom_details = []
+        total_qty = 0
+        material_name = ""
+        
+        for item in bom_items:
+            # 查询该BOM中指定物料的用量
+            material_info = frappe.db.sql("""
+                SELECT 
+                    item_code,
+                    item_name,
+                    qty
+                FROM `tabBOM Item`
+                WHERE parent = %(bom_no)s
+                    AND item_code = %(material_item_code)s
+                LIMIT 1
+            """, {
+                "bom_no": item.updated_bom,
+                "material_item_code": material_item_code
+            }, as_dict=True)
+            
+            if material_info:
+                material = material_info[0]
+                qty = flt(material.qty)
+                total_qty += qty
+                
+                if not material_name:
+                    material_name = material.item_name
+                
+                bom_details.append({
+                    "bom_no": item.updated_bom,
+                    "product_item_code": item.item_code,
+                    "product_color": item.color or "",
+                    "material_qty": qty
+                })
+        
+        if not bom_details:
+            return {
+                "status": "warning",
+                "message": f"在符合条件的BOM中未找到物料 {material_item_code}"
+            }
+        
+        # 6. 计算平均值
+        bom_count = len(bom_details)
+        avg_qty = total_qty / bom_count if bom_count > 0 else 0
+        
+        # 7. 返回结果
+        return {
+            "status": "success",
+            "message": f"成功查询到 {bom_count} 个BOM中包含物料 {material_item_code}",
+            "data": {
+                "sales_order": sales_order,
+                "product_color": product_color or "",
+                "material_item_code": material_item_code,
+                "material_item_name": material_name,
+                "bom_count": bom_count,
+                "total_qty": total_qty,
+                "avg_qty": avg_qty,
+                "bom_details": bom_details
+            }
+        }
+        
+    except Exception as e:
+        frappe.log_error(
+            message=f"获取销售订单BOM信息时发生错误: {str(e)}\n销售订单: {args.get('sales_order')}",
+            title="Get BOM Info By SO Error"
+        )
+        return {
+            "status": "error",
+            "message": f"获取销售订单BOM信息失败: {str(e)}"
+        }
+
+
+@frappe.whitelist()
 def test_bom_explosion():
     """
     测试BOM展开功能的演示方法
