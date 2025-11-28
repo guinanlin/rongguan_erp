@@ -520,6 +520,29 @@ def get_production_order_details(docname):
         else:
             doc_dict["paper_pattern_status"] = ""
         
+        # 获取销售订单状态（如果 order_number 有值）
+        if doc_dict.get("order_number"):
+            try:
+                # 根据销售订单号查找对应的销售订单
+                sales_order_docs = frappe.get_all(
+                    "Sales Order",
+                    filters={"name": doc_dict.get("order_number")},
+                    fields=["name", "docstatus"],
+                    limit=1
+                )
+                
+                if sales_order_docs:
+                    sales_order_doc = sales_order_docs[0]
+                    # 直接返回 docstatus 原始值
+                    doc_dict["sales_order_status"] = sales_order_doc.docstatus
+                else:
+                    doc_dict["sales_order_status"] = None
+            except Exception as e:
+                frappe.log_error(f"获取销售订单 {doc_dict.get('order_number')} 状态时出错: {str(e)}")
+                doc_dict["sales_order_status"] = None
+        else:
+            doc_dict["sales_order_status"] = None
+        
         # 处理 items 子表，添加颜色和尺码信息
         if "items" in doc_dict and doc_dict["items"]:
             for item in doc_dict["items"]:
