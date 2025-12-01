@@ -24,6 +24,13 @@
   "sample_grade",
   "category",
   "sales_order",
+  "section_break_assignment",
+  "assigned_status",
+  "assigned_pattern_designer_id",
+  "assigned_pattern_designer_name",
+  "assigned_at",
+  "assigned_by",
+  "paper_pattern_name",
   "section_break_ihnw",
   "images",
   "remarks",
@@ -169,6 +176,55 @@
    "fieldtype": "Link",
    "label": "Sales Order",
    "options": "Sales Order"
+  },
+  {
+   "fieldname": "section_break_assignment",
+   "fieldtype": "Section Break",
+   "label": "\u6307\u6d3e\u4fe1\u606f",
+   "collapsible": 1
+  },
+  {
+   "fieldname": "assigned_status",
+   "fieldtype": "Select",
+   "label": "\u6307\u6d3e\u72b6\u6001",
+   "options": "unassigned\nassigned",
+   "default": "unassigned",
+   "reqd": 1,
+   "in_list_view": 1,
+   "in_standard_filter": 1
+  },
+  {
+   "fieldname": "assigned_pattern_designer_id",
+   "fieldtype": "Link",
+   "label": "\u88ab\u6307\u6d3e\u7684\u7eb8\u6837\u5e08",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "assigned_pattern_designer_name",
+   "fieldtype": "Data",
+   "label": "\u7eb8\u6837\u5e08\u540d\u79f0",
+   "read_only": 1,
+   "fetch_from": "assigned_pattern_designer_id.employee_name"
+  },
+  {
+   "fieldname": "assigned_at",
+   "fieldtype": "Datetime",
+   "label": "\u6307\u6d3e\u65f6\u95f4",
+   "read_only": 1
+  },
+  {
+   "fieldname": "assigned_by",
+   "fieldtype": "Link",
+   "label": "\u6307\u6d3e\u64cd\u4f5c\u4eba",
+   "options": "User",
+   "read_only": 1
+  },
+  {
+   "fieldname": "paper_pattern_name",
+   "fieldtype": "Link",
+   "label": "\u5173\u8054\u7684\u7eb8\u6837\u5355",
+   "options": "RG Paper Pattern",
+   "read_only": 1
   }
  ],
  "grid_page_length": 50,

@@ -119,7 +119,7 @@
   {
    "fieldname": "pattern_number",
    "fieldtype": "Link",
-   "label": "pattern number",
+   "label": "\u6837\u8863\u7f16\u53f7",
    "options": "RG Pattern"
   },
   {

@@ -6,7 +6,115 @@ from frappe.model.document import Document
 
 
 class RGPattern(Document):
-	pass
+	def validate(self):
+		"""验证字段逻辑"""
+		self.validate_assignment()
+	
+	def validate_assignment(self):
+		"""验证指派相关字段"""
+		# 如果状态为 assigned，必须指定纸样师
+		if self.assigned_status == "assigned" and not self.assigned_pattern_designer_id:
+			frappe.throw("指派状态为'已指派'时，必须指定被指派的纸样师")
+		
+		# 如果状态为 unassigned，清空指派相关字段
+		if self.assigned_status == "unassigned":
+			self.assigned_pattern_designer_id = None
+			self.assigned_pattern_designer_name = None
+			self.assigned_at = None
+			self.assigned_by = None
+	
+	def before_save(self):
+		"""保存前处理"""
+		# 检查指派状态是否改变
+		if self.is_new():
+			# 新记录，如果状态为 assigned，设置指派信息
+			if self.assigned_status == "assigned" and self.assigned_pattern_designer_id:
+				self.assigned_at = frappe.utils.now()
+				self.assigned_by = frappe.session.user
+		else:
+			# 更新记录，检查状态是否从 unassigned 变为 assigned
+			old_doc = self.get_doc_before_save()
+			if old_doc:
+				if old_doc.assigned_status == "unassigned" and self.assigned_status == "assigned":
+					# 状态变为已指派，设置指派时间和操作人
+					if self.assigned_pattern_designer_id:
+						self.assigned_at = frappe.utils.now()
+						self.assigned_by = frappe.session.user
+				elif old_doc.assigned_status == "assigned" and self.assigned_status == "unassigned":
+					# 状态变为未指派，清空指派信息
+					self.assigned_pattern_designer_id = None
+					self.assigned_pattern_designer_name = None
+					self.assigned_at = None
+					self.assigned_by = None
+				elif old_doc.assigned_status == "assigned" and self.assigned_status == "assigned":
+					# 如果纸样师改变，更新指派时间和操作人
+					if old_doc.assigned_pattern_designer_id != self.assigned_pattern_designer_id:
+						if self.assigned_pattern_designer_id:
+							self.assigned_at = frappe.utils.now()
+							self.assigned_by = frappe.session.user
+
+
+@frappe.whitelist()
+def update_pattern_assignment(pattern_name, pattern_maker_id=None, pattern_maker_name=None, paper_pattern_name=None):
+	"""
+	前端在纸样指派成功后调用，用于更新 RG Pattern 的指派状态。
+
+	参数:
+		pattern_name (str): RG Pattern 的 name，例如：SM-0001
+		pattern_maker_id (str): 被指派的纸样师 Employee ID
+		pattern_maker_name (str): 纸样师名称（可选）
+		paper_pattern_name (str): 刚创建的 RG Paper Pattern.name（可选）
+	"""
+	if not pattern_name:
+		frappe.throw("参数 pattern_name 不能为空")
+
+	if not pattern_maker_id:
+		frappe.throw("参数 pattern_maker_id 不能为空")
+
+	# 获取样衣单
+	doc = frappe.get_doc("RG Pattern", pattern_name)
+
+	# 并发 / 重复指派检查：
+	# - 如果已经是 assigned 且已有纸样师
+	# - 且新的纸样师与旧的不同，则不允许直接覆盖
+	if (
+		doc.assigned_status == "assigned"
+		and doc.assigned_pattern_designer_id
+		and doc.assigned_pattern_designer_id != pattern_maker_id
+	):
+		frappe.throw(
+			f"样衣 {pattern_name} 已指派给 "
+			f"{doc.assigned_pattern_designer_name or doc.assigned_pattern_designer_id}，"
+			"如需更换纸样师，请先在系统中取消指派后再操作。"
+		)
+
+	# 更新指派相关字段
+	doc.assigned_status = "assigned"
+	doc.assigned_pattern_designer_id = pattern_maker_id
+
+	# 名称如果前端传了，就覆盖；不传则保留 ERPNext 通过 fetch_from 带出的名称
+	if pattern_maker_name:
+		doc.assigned_pattern_designer_name = pattern_maker_name
+
+	doc.assigned_at = frappe.utils.now()
+	doc.assigned_by = frappe.session.user
+
+	if paper_pattern_name:
+		doc.paper_pattern_name = paper_pattern_name
+
+	# 保存文档，触发 validate / before_save 等钩子
+	doc.save(ignore_permissions=True)
+
+	return {
+		"status": "success",
+		"name": doc.name,
+		"assigned_status": doc.assigned_status,
+		"assigned_pattern_designer_id": doc.assigned_pattern_designer_id,
+		"assigned_pattern_designer_name": doc.assigned_pattern_designer_name,
+		"assigned_at": doc.assigned_at,
+		"assigned_by": doc.assigned_by,
+		"paper_pattern_name": doc.paper_pattern_name,
+	}
 
 
 @frappe.whitelist()
