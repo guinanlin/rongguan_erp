@@ -11,6 +11,8 @@
   "item_description",
   "item_color",
   "qty_per_unit",
+  "pattern_maker_qty_per_unit",
+  "marker_diagram",
   "garment_color",
   "shared",
   "garment_qty",
@@ -62,6 +64,16 @@
    "in_list_view": 1,
    "label": "\u5355\u4ef6\u7528\u91cf",
    "reqd": 1
+  },
+  {
+   "fieldname": "pattern_maker_qty_per_unit",
+   "fieldtype": "Float",
+   "label": "\u7248\u5e08\u5355\u4ef6\u7528\u91cf"
+  },
+  {
+   "fieldname": "marker_diagram",
+   "fieldtype": "Attach Image",
+   "label": "\u54d2\u67b6\u56fe"
   },
   {
    "fieldname": "garment_color",

@@ -657,6 +657,8 @@ def update_bom_detail_listing(docname, detail_listing_data):
                 "item_description": item_data.get("item_description", ""),
                 "item_color": item_data.get("item_color", ""),
                 "qty_per_unit": item_data.get("qty_per_unit", 0),
+				"pattern_maker_qty_per_unit": item_data.get("pattern_maker_qty_per_unit", 0),
+				"marker_diagram": item_data.get("marker_diagram", ""),
                 "garment_color": item_data.get("garment_color", ""),
                 "shared": item_data.get("shared", 0),
                 "garment_qty": item_data.get("garment_qty", 0),
