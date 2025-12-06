@@ -1,0 +1,294 @@
+{
+ "actions": [],
+ "allow_rename": 1,
+ "creation": "2025-12-06 11:57:59.150715",
+ "doctype": "DocType",
+ "engine": "InnoDB",
+ "field_order": [
+  "section_break_basic_info",
+  "sheet_type",
+  "business_type",
+  "contract_date",
+  "column_break_smfn",
+  "customer",
+  "style_number",
+  "style_name",
+  "column_break_basic",
+  "season",
+  "quantity",
+  "color",
+  "section_break_price_info",
+  "currency",
+  "column_break_vsyk",
+  "unit_price",
+  "column_break_hmdm",
+  "amount",
+  "section_break_business_info",
+  "salesperson",
+  "delivery_date",
+  "sample_type",
+  "column_break_business",
+  "pattern_designer",
+  "remark",
+  "section_break_payment_info",
+  "receivable_amount",
+  "received_amount",
+  "column_break_payment",
+  "payment_date",
+  "payment_terms",
+  "section_break_cost_info",
+  "freight_cost",
+  "fabric_cost",
+  "accessory_cost",
+  "pattern_cost",
+  "column_break_cost",
+  "production_cost",
+  "logistics_cost",
+  "management_cost",
+  "other_cost",
+  "gross_profit"
+ ],
+ "fields": [
+  {
+   "fieldname": "section_break_basic_info",
+   "fieldtype": "Section Break",
+   "label": "\u57fa\u7840\u4fe1\u606f"
+  },
+  {
+   "fieldname": "sheet_type",
+   "fieldtype": "Select",
+   "in_list_view": 1,
+   "label": "\u5de5\u4f5c\u8868\u7c7b\u578b",
+   "options": "\n\u6253\u6837\n\u9500\u6837\n\u53d6\u6d88",
+   "reqd": 1
+  },
+  {
+   "fieldname": "contract_date",
+   "fieldtype": "Date",
+   "label": "\u5408\u540c\u65e5\u671f"
+  },
+  {
+   "fieldname": "business_type",
+   "fieldtype": "Data",
+   "label": "\u4e1a\u52a1\u7c7b\u578b"
+  },
+  {
+   "fieldname": "customer",
+   "fieldtype": "Link",
+   "label": "\u5ba2\u6237",
+   "options": "Customer"
+  },
+  {
+   "fieldname": "season",
+   "fieldtype": "Data",
+   "label": "\u5b63\u8282"
+  },
+  {
+   "fieldname": "style_number",
+   "fieldtype": "Link",
+   "label": "\u6b3e\u53f7",
+   "options": "Item"
+  },
+  {
+   "fetch_from": "style_number.item_name",
+   "fieldname": "style_name",
+   "fieldtype": "Data",
+   "label": "\u6b3e\u5f0f",
+   "read_only": 1
+  },
+  {
+   "fieldname": "color",
+   "fieldtype": "Data",
+   "label": "\u989c\u8272"
+  },
+  {
+   "fieldname": "quantity",
+   "fieldtype": "Float",
+   "label": "\u6570\u91cf"
+  },
+  {
+   "fieldname": "column_break_basic",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_price_info",
+   "fieldtype": "Section Break",
+   "label": "\u4ef7\u683c\u4fe1\u606f"
+  },
+  {
+   "fieldname": "currency",
+   "fieldtype": "Link",
+   "label": "\u5e01\u79cd",
+   "options": "Currency"
+  },
+  {
+   "fieldname": "unit_price",
+   "fieldtype": "Currency",
+   "label": "\u5355\u4ef7"
+  },
+  {
+   "fieldname": "amount",
+   "fieldtype": "Currency",
+   "label": "\u91d1\u989d"
+  },
+  {
+   "fieldname": "section_break_business_info",
+   "fieldtype": "Section Break",
+   "label": "\u4e1a\u52a1\u4fe1\u606f"
+  },
+  {
+   "fieldname": "salesperson",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u4e1a\u52a1\u5458",
+   "reqd": 1
+  },
+  {
+   "fieldname": "delivery_date",
+   "fieldtype": "Date",
+   "label": "\u4ea4\u8d27\u65e5\u671f"
+  },
+  {
+   "fieldname": "sample_type",
+   "fieldtype": "Data",
+   "label": "\u6837\u677f\u7c7b\u578b"
+  },
+  {
+   "fieldname": "pattern_designer",
+   "fieldtype": "Link",
+   "label": "\u7248\u5e08",
+   "options": "Employee"
+  },
+  {
+   "fieldname": "column_break_business",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "remark",
+   "fieldtype": "Small Text",
+   "label": "\u5907\u6ce8"
+  },
+  {
+   "fieldname": "section_break_payment_info",
+   "fieldtype": "Section Break",
+   "label": "\u6536\u6b3e\u4fe1\u606f"
+  },
+  {
+   "fieldname": "receivable_amount",
+   "fieldtype": "Currency",
+   "label": "\u5e94\u6536\u8d27\u6b3e"
+  },
+  {
+   "fieldname": "received_amount",
+   "fieldtype": "Currency",
+   "label": "\u5b9e\u6536\u8d27\u6b3e"
+  },
+  {
+   "fieldname": "payment_terms",
+   "fieldtype": "Data",
+   "label": "\u8d26\u671f"
+  },
+  {
+   "fieldname": "payment_date",
+   "fieldtype": "Date",
+   "label": "\u6536\u6b3e\u65e5\u671f"
+  },
+  {
+   "fieldname": "column_break_payment",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "section_break_cost_info",
+   "fieldtype": "Section Break",
+   "label": "\u8d39\u7528\u4fe1\u606f"
+  },
+  {
+   "fieldname": "freight_cost",
+   "fieldtype": "Currency",
+   "label": "\u8d27\u4ee3\u8d39\u7528"
+  },
+  {
+   "fieldname": "fabric_cost",
+   "fieldtype": "Currency",
+   "label": "\u9762\u6599\u8d39\u7528"
+  },
+  {
+   "fieldname": "accessory_cost",
+   "fieldtype": "Currency",
+   "label": "\u8f85\u6599\u8d39\u7528"
+  },
+  {
+   "fieldname": "pattern_cost",
+   "fieldtype": "Currency",
+   "label": "\u7eb8\u6837\u8d39"
+  },
+  {
+   "fieldname": "production_cost",
+   "fieldtype": "Currency",
+   "label": "\u751f\u4ea7\u8d39\u7528"
+  },
+  {
+   "fieldname": "logistics_cost",
+   "fieldtype": "Currency",
+   "label": "\u7269\u6d41\u8d39\u7528"
+  },
+  {
+   "fieldname": "management_cost",
+   "fieldtype": "Currency",
+   "label": "\u7ba1\u7406\u8d39\u7528"
+  },
+  {
+   "fieldname": "other_cost",
+   "fieldtype": "Currency",
+   "label": "\u5176\u4ed6\u8d39\u7528"
+  },
+  {
+   "fieldname": "column_break_cost",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "gross_profit",
+   "fieldtype": "Currency",
+   "label": "\u6bdb\u5229",
+   "read_only": 1
+  },
+  {
+   "fieldname": "column_break_smfn",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_vsyk",
+   "fieldtype": "Column Break"
+  },
+  {
+   "fieldname": "column_break_hmdm",
+   "fieldtype": "Column Break"
+  }
+ ],
+ "grid_page_length": 50,
+ "index_web_pages_for_search": 1,
+ "links": [],
+ "modified": "2025-12-06 20:01:10.589118",
+ "modified_by": "Administrator",
+ "module": "Rongguan Erp",
+ "name": "W70 Sample Sales Base",
+ "owner": "Administrator",
+ "permissions": [
+  {
+   "create": 1,
+   "delete": 1,
+   "email": 1,
+   "export": 1,
+   "print": 1,
+   "read": 1,
+   "report": 1,
+   "role": "System Manager",
+   "share": 1,
+   "write": 1
+  }
+ ],
+ "row_format": "Dynamic",
+ "sort_field": "modified",
+ "sort_order": "DESC",
+ "states": []
+}
