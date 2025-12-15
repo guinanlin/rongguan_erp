@@ -673,7 +673,8 @@ def update_bom_detail_listing(docname, detail_listing_data):
                 "ordered_qty": item_data.get("ordered_qty", 0),
                 "planned_qty": item_data.get("planned_qty", 0),
                 "purchase_planned_qty": item_data.get("purchase_planned_qty", 0),
-                "warehouse": item_data.get("warehouse", "")
+                "warehouse": item_data.get("warehouse", ""),
+				"remarks": item_data.get("remarks", "")
             }
             
             # 添加到子表

@@ -28,7 +28,8 @@
   "planned_qty",
   "purchase_planned_qty",
   "warehouse",
-  "supplier"
+  "supplier",
+  "remarks"
  ],
  "fields": [
   {
@@ -184,13 +185,19 @@
    "fieldname": "supplier",
    "fieldtype": "Data",
    "label": "Supplier"
+  },
+  {
+   "fieldname": "remarks",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "Remarks"
   }
  ],
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "istable": 1,
  "links": [],
- "modified": "2025-09-16 10:02:24.839394",
+ "modified": "2025-12-09 16:03:00.614948",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "RG BOM Detail Listing",

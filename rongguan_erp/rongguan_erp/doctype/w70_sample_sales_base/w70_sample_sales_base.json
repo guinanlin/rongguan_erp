@@ -9,6 +9,7 @@
   "sheet_type",
   "business_type",
   "contract_date",
+  "po_number",
   "column_break_smfn",
   "customer",
   "style_number",
@@ -31,21 +32,24 @@
   "pattern_designer",
   "remark",
   "section_break_payment_info",
-  "receivable_amount",
+  "receivable_amount_usd",
+  "receivable_amount_cny",
   "received_amount",
   "column_break_payment",
   "payment_date",
   "payment_terms",
   "section_break_cost_info",
   "freight_cost",
-  "fabric_cost",
+  "fabric_lining_cost",
   "accessory_cost",
   "pattern_cost",
+  "special_process_cost",
   "column_break_cost",
   "production_cost",
   "logistics_cost",
   "management_cost",
   "other_cost",
+  "total_cost",
   "gross_profit"
  ],
  "fields": [
@@ -66,6 +70,11 @@
    "fieldname": "contract_date",
    "fieldtype": "Date",
    "label": "\u5408\u540c\u65e5\u671f"
+  },
+  {
+   "fieldname": "po_number",
+   "fieldtype": "Data",
+   "label": "PO\u53f7"
   },
   {
    "fieldname": "business_type",
@@ -117,9 +126,8 @@
   },
   {
    "fieldname": "currency",
-   "fieldtype": "Link",
-   "label": "\u5e01\u79cd",
-   "options": "Currency"
+   "fieldtype": "Data",
+   "label": "\u5e01\u79cd"
   },
   {
    "fieldname": "unit_price",
@@ -155,9 +163,8 @@
   },
   {
    "fieldname": "pattern_designer",
-   "fieldtype": "Link",
-   "label": "\u7248\u5e08",
-   "options": "Employee"
+   "fieldtype": "Data",
+   "label": "\u7248\u5e08"
   },
   {
    "fieldname": "column_break_business",
@@ -174,9 +181,14 @@
    "label": "\u6536\u6b3e\u4fe1\u606f"
   },
   {
-   "fieldname": "receivable_amount",
+   "fieldname": "receivable_amount_usd",
    "fieldtype": "Currency",
-   "label": "\u5e94\u6536\u8d27\u6b3e"
+   "label": "\u5e94\u6536\u7f8e\u91d1\u8d27\u6b3e"
+  },
+  {
+   "fieldname": "receivable_amount_cny",
+   "fieldtype": "Currency",
+   "label": "\u5e94\u6536\u4eba\u6c11\u5e01\u8d27\u6b3e"
   },
   {
    "fieldname": "received_amount",
@@ -208,9 +220,9 @@
    "label": "\u8d27\u4ee3\u8d39\u7528"
   },
   {
-   "fieldname": "fabric_cost",
+   "fieldname": "fabric_lining_cost",
    "fieldtype": "Currency",
-   "label": "\u9762\u6599\u8d39\u7528"
+   "label": "\u9762\u91cc\u6599\u8d39\u7528"
   },
   {
    "fieldname": "accessory_cost",
@@ -221,6 +233,11 @@
    "fieldname": "pattern_cost",
    "fieldtype": "Currency",
    "label": "\u7eb8\u6837\u8d39"
+  },
+  {
+   "fieldname": "special_process_cost",
+   "fieldtype": "Currency",
+   "label": "\u7279\u6b8a\u5de5\u827a\u8d39\u7528"
   },
   {
    "fieldname": "production_cost",
@@ -247,6 +264,12 @@
    "fieldtype": "Column Break"
   },
   {
+   "fieldname": "total_cost",
+   "fieldtype": "Currency",
+   "label": "\u603b\u6210\u672c\u8d39\u7528",
+   "read_only": 1
+  },
+  {
    "fieldname": "gross_profit",
    "fieldtype": "Currency",
    "label": "\u6bdb\u5229",
@@ -268,7 +291,7 @@
  "grid_page_length": 50,
  "index_web_pages_for_search": 1,
  "links": [],
- "modified": "2025-12-06 20:01:10.589118",
+ "modified": "2025-12-13 01:42:13.636615",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "W70 Sample Sales Base",
