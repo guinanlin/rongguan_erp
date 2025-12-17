@@ -16,6 +16,27 @@ def get_sales_order_tracking(*args, **kwargs):
     根据销售订单号获取订单的跟踪信息
     """
     try:
+        def _get_dty_approval_info(ref_doctype: str, ref_document: str):
+            """根据引用单据查询 DTY Approval（审批单号与状态）。"""
+            if not ref_doctype or not ref_document:
+                return {"approval_no": None, "approval_status": None}
+
+            approval_docs = frappe.get_all(
+                "DTY Approval",
+                filters={"ref_doctype": ref_doctype, "ref_document": ref_document},
+                fields=["sp_no", "sp_status"],
+                order_by="modified desc",
+                limit=1,
+            )
+
+            if not approval_docs:
+                return {"approval_no": None, "approval_status": None}
+
+            return {
+                "approval_no": approval_docs[0].sp_no,
+                "approval_status": approval_docs[0].sp_status,
+            }
+
         # 获取参数
         sales_order_number = kwargs.get('sales_order_number') or kwargs.get('name')
         if not sales_order_number and args:
@@ -46,21 +67,45 @@ def get_sales_order_tracking(*args, **kwargs):
         )
         
         if production_order_docs:
+            production_order_approval = _get_dty_approval_info(
+                "RG Production Orders", production_order_docs[0].name
+            )
             production_order = {
                 "document_number": production_order_docs[0].name,
                 "order_status": production_order_docs[0].status or "未知",
-                "approval_no": None,
-                "approval_status": None
+                "approval_no": production_order_approval.get("approval_no"),
+                "approval_status": production_order_approval.get("approval_status"),
             }
         
+        # 查询纸样单（通过 sales_order 关联）
+        paper_pattern = None
+        paper_pattern_docs = frappe.get_all(
+            "RG Paper Pattern",
+            filters={"sales_order": sales_order_number},
+            fields=["name", "docstatus"],
+            limit=1,
+        )
+
+        if paper_pattern_docs:
+            paper_pattern_approval = _get_dty_approval_info(
+                "RG Paper Pattern", paper_pattern_docs[0].name
+            )
+            paper_pattern = {
+                "document_number": paper_pattern_docs[0].name,
+                "order_status": status_map.get(paper_pattern_docs[0].docstatus, "未知"),
+                "approval_no": paper_pattern_approval.get("approval_no"),
+                "approval_status": paper_pattern_approval.get("approval_status"),
+            }
+
         result = {
             "success": True,
             "data": {
                 "sales_order": {
                     "document_number": sales_order.name,
                     "order_status": status_map.get(sales_order.docstatus, "未知"),
-                    "approval_no": getattr(sales_order, "custom_approval_no", None),
-                    "approval_status": None
+                    "approval_no": _get_dty_approval_info("Sales Order", sales_order.name).get("approval_no")
+                    or getattr(sales_order, "custom_approval_no", None),
+                    "approval_status": _get_dty_approval_info("Sales Order", sales_order.name).get("approval_status"),
                 }
             }
         }
@@ -68,6 +113,10 @@ def get_sales_order_tracking(*args, **kwargs):
         # 添加生产制造通知单信息
         if production_order:
             result["data"]["production_order"] = production_order
+
+        # 添加纸样单信息
+        if paper_pattern:
+            result["data"]["paper_pattern"] = paper_pattern
         
         return result
         
