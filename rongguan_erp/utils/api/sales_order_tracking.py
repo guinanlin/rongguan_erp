@@ -97,6 +97,32 @@ def get_sales_order_tracking(*args, **kwargs):
                 "approval_status": paper_pattern_approval.get("approval_status"),
             }
 
+        # 查询物料请求（采购计划）（通过 custom_sales_order_number 关联）
+        material_request = None
+        material_request_docs = frappe.get_all(
+            "Material Request",
+            filters={"custom_sales_order_number": sales_order_number},
+            fields=["name", "status", "docstatus", "per_ordered"],
+            order_by="creation desc",
+            limit=1,
+        )
+
+        if material_request_docs:
+            mr = material_request_docs[0]
+            
+            # 根据业务逻辑确定状态：如果已生成采购订单（per_ordered > 0），状态为"已下单"，否则为"待采购"
+            if mr.docstatus == 1 and mr.per_ordered > 0:
+                order_status = "已下单"
+            elif mr.docstatus == 1 and mr.per_ordered == 0:
+                order_status = "待采购"
+            else:
+                order_status = mr.status or "未知"
+            
+            material_request = {
+                "document_number": mr.name,
+                "order_status": order_status,
+            }
+
         result = {
             "success": True,
             "data": {
@@ -117,6 +143,233 @@ def get_sales_order_tracking(*args, **kwargs):
         # 添加纸样单信息
         if paper_pattern:
             result["data"]["paper_pattern"] = paper_pattern
+        
+        # 添加物料请求（采购计划）信息
+        if material_request:
+            result["data"]["material_request"] = material_request
+        
+        # 查询采购订单（通过物料请求关联）
+        purchase_order = None
+        purchase_order_name = None
+        if material_request_docs:
+            # 查询与物料请求关联的采购订单
+            purchase_order_list = frappe.db.sql("""
+                SELECT DISTINCT po.name, po.status, po.docstatus
+                FROM `tabPurchase Order` po
+                INNER JOIN `tabPurchase Order Item` poi ON poi.parent = po.name
+                WHERE poi.material_request = %s
+                ORDER BY po.creation DESC
+                LIMIT 1
+            """, (material_request_docs[0].name,), as_dict=True)
+            
+            if purchase_order_list:
+                po = purchase_order_list[0]
+                purchase_order_name = po.name
+                purchase_order_approval = _get_dty_approval_info(
+                    "Purchase Order", po.name
+                )
+                purchase_order = {
+                    "document_number": po.name,
+                    "order_status": po.status or "未知",
+                    "approval_no": purchase_order_approval.get("approval_no"),
+                    "approval_status": purchase_order_approval.get("approval_status"),
+                }
+        
+        # 添加采购订单信息
+        if purchase_order:
+            result["data"]["purchase_order"] = purchase_order
+        
+        # 查询采购接收（通过采购订单关联）
+        purchase_receipt = None
+        if purchase_order_name:
+            # 查询与采购订单关联的采购接收
+            purchase_receipt_list = frappe.db.sql("""
+                SELECT DISTINCT pr.name, pr.status, pr.docstatus
+                FROM `tabPurchase Receipt` pr
+                INNER JOIN `tabPurchase Receipt Item` pri ON pri.parent = pr.name
+                WHERE pri.purchase_order = %s
+                ORDER BY pr.creation DESC
+                LIMIT 1
+            """, (purchase_order_name,), as_dict=True)
+            
+            if purchase_receipt_list:
+                pr = purchase_receipt_list[0]
+                purchase_receipt = {
+                    "document_number": pr.name,
+                    "order_status": pr.status or "未知",
+                }
+        
+        # 添加采购接收信息
+        if purchase_receipt:
+            result["data"]["purchase_receipt"] = purchase_receipt
+        
+        # 查询生产工单（通过 sales_order 直接关联）
+        work_order = None
+        work_order_docs = frappe.get_all(
+            "Work Order",
+            filters={"sales_order": sales_order_number},
+            fields=["name", "status", "docstatus"],
+            order_by="creation desc",
+            limit=1,
+        )
+        
+        if work_order_docs:
+            wo = work_order_docs[0]
+            work_order = {
+                "document_number": wo.name,
+                "order_status": wo.status or "未知",
+            }
+        
+        # 添加生产工单信息
+        if work_order:
+            result["data"]["work_order"] = work_order
+        
+        # 查询产前会议确认状态（通过 RG Production Progress 的封样日期判断）
+        pre_production_meeting = None
+        production_progress_docs = frappe.get_all(
+            "RG Production Progress",
+            filters={"sales_order_id": sales_order_number},
+            fields=["name", "sealing_sample_date"],
+        )
+        
+        if production_progress_docs:
+            # 检查是否有任何一条记录的封样日期不为空
+            has_sealing_date = any(
+                doc.get("sealing_sample_date") for doc in production_progress_docs
+            )
+            
+            pre_production_meeting = {
+                "document_number": sales_order_number,
+                "order_status": "已确认" if has_sealing_date else "待确认",
+            }
+        else:
+            # 如果没有生产进度记录，默认为待确认
+            pre_production_meeting = {
+                "document_number": sales_order_number,
+                "order_status": "待确认",
+            }
+        
+        # 添加产前会议确认信息
+        if pre_production_meeting:
+            result["data"]["pre_production_meeting"] = pre_production_meeting
+        
+        # 查询裁剪报工状态（通过 RG Cutting Work Report 判断）
+        cutting_work = None
+        cutting_work_docs = frappe.get_all(
+            "RG Cutting Work Report",
+            filters={"sales_order": sales_order_number},
+            fields=["name"],
+            limit=1,
+        )
+        
+        if cutting_work_docs:
+            # 如果找到至少一条记录，表示裁剪已开始
+            cutting_work = {
+                "document_number": sales_order_number,
+                "order_status": "已开始",
+            }
+        else:
+            # 如果找不到任何记录，表示裁剪未开始
+            cutting_work = {
+                "document_number": sales_order_number,
+                "order_status": "未开始",
+            }
+        
+        # 添加裁剪报工信息
+        if cutting_work:
+            result["data"]["cutting_work"] = cutting_work
+        
+        # 查询领料状态（通过 Stock Entry 类型为 "Send to Subcontractor" 判断）
+        material_issue = None
+        # 查询方式1：通过 custom_sales_order_number 字段
+        stock_entry_docs1 = frappe.get_all(
+            "Stock Entry",
+            filters={
+                "stock_entry_type": "Send to Subcontractor",
+                "custom_sales_order_number": sales_order_number
+            },
+            fields=["name"],
+            limit=1,
+        )
+        
+        # 查询方式2：通过 work_order -> Work Order.sales_order 关联
+        stock_entry_docs2 = frappe.db.sql("""
+            SELECT DISTINCT ste.name
+            FROM `tabStock Entry` ste
+            INNER JOIN `tabWork Order` wo ON wo.name = ste.work_order
+            WHERE ste.stock_entry_type = 'Send to Subcontractor'
+            AND wo.sales_order = %s
+            LIMIT 1
+        """, (sales_order_number,), as_dict=True)
+        
+        # 如果找到至少一条记录，表示已领料
+        if stock_entry_docs1 or stock_entry_docs2:
+            material_issue = {
+                "document_number": sales_order_number,
+                "order_status": "已领料",
+            }
+        else:
+            # 如果找不到任何记录，表示未领料
+            material_issue = {
+                "document_number": sales_order_number,
+                "order_status": "未领料",
+            }
+        
+        # 添加领料信息
+        if material_issue:
+            result["data"]["material_issue"] = material_issue
+        
+        # 查询生产报工状态（通过 RG Production Report 判断）
+        production_report = None
+        production_report_docs = frappe.get_all(
+            "RG Production Report",
+            filters={"sales_order": sales_order_number},
+            fields=["name"],
+            limit=1,
+        )
+        
+        if production_report_docs:
+            # 如果找到至少一条记录，表示生产中
+            production_report = {
+                "document_number": sales_order_number,
+                "order_status": "生产中",
+            }
+        else:
+            # 如果找不到任何记录，表示未生产
+            production_report = {
+                "document_number": sales_order_number,
+                "order_status": "未生产",
+            }
+        
+        # 添加生产报工信息
+        if production_report:
+            result["data"]["production_report"] = production_report
+        
+        # 查询QC巡查状态（通过 QC Patrol Record 判断）
+        qc_patrol = None
+        qc_patrol_docs = frappe.get_all(
+            "QC Patrol Record",
+            filters={"order_number": sales_order_number},
+            fields=["name"],
+            limit=1,
+        )
+        
+        if qc_patrol_docs:
+            # 如果找到至少一条记录，表示QC巡查已完成
+            qc_patrol = {
+                "document_number": sales_order_number,
+                "order_status": "已完成",
+            }
+        else:
+            # 如果找不到任何记录，表示QC巡查待处理
+            qc_patrol = {
+                "document_number": sales_order_number,
+                "order_status": "待处理",
+            }
+        
+        # 添加QC巡查信息
+        if qc_patrol:
+            result["data"]["qc_patrol"] = qc_patrol
         
         return result
         
