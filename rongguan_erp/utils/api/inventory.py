@@ -27,7 +27,7 @@ def get_stock_entries_with_items(
         包含分页信息和数据的字典
     """
     try:
-        # 默认字段
+        # 默认字段（含工单与销售订单号，供领料出库列表展示）
         if not fields:
             fields = [
                 'name', 'naming_series', 'stock_entry_type', 'purpose', 
@@ -40,7 +40,8 @@ def get_stock_entries_with_items(
                 'total_amount', 'is_return', 'creation', 'modified', 'owner', 
                 'modified_by', 'docstatus', 'idx', 'address_display', 
                 'purchase_receipt_no', 'supplier_address', 'supplier_name', 
-                'supplier', 'sales_invoice_no', 'delivery_note_no'
+                'supplier', 'sales_invoice_no', 'delivery_note_no',
+                'work_order', 'custom_sales_order_number'
             ]
         
         # 默认过滤条件
@@ -88,7 +89,29 @@ def get_stock_entries_with_items(
                 ignore_permissions=True
             )
             entry['items'] = items
-        
+
+        # 为领料出库列表补充销售订单号：优先用 Stock Entry 的 custom_sales_order_number，
+        # 若无则从 Work Order 的 sales_order 带出，供前端「销售订单号」列展示
+        work_order_names = [
+            e.get('work_order') for e in stock_entries
+            if e.get('work_order') and not (e.get('custom_sales_order_number') or '').strip()
+        ]
+        wo_sales_order_map = {}
+        if work_order_names:
+            wo_list = frappe.get_all(
+                'Work Order',
+                filters={'name': ['in', list(set(work_order_names))]},
+                fields=['name', 'sales_order'],
+                ignore_permissions=True
+            )
+            wo_sales_order_map = {r['name']: (r.get('sales_order') or '') for r in wo_list}
+        for entry in stock_entries:
+            sales_order_value = (entry.get('custom_sales_order_number') or '').strip()
+            if not sales_order_value and entry.get('work_order'):
+                sales_order_value = wo_sales_order_map.get(entry['work_order'], '') or ''
+            entry['sales_order'] = sales_order_value
+            entry['custom_sales_order'] = sales_order_value
+
         # 计算分页信息
         total_pages = (total_count + page_length - 1) // page_length
         has_prev = page > 1
