@@ -29,9 +29,34 @@ def get_items_with_attributes(filters=None, fields=None, or_filters=None, order_
         doc = frappe.get_doc('Item', item)
         data = doc.as_dict()
         data["attributes"] = doc.attributes
+        # 为前端「选建议」时提供物料颜色/尺码：从 Item 变体属性中解析（Item Attribute _user_tags 含「颜色」/「尺寸」）
+        color, size = _get_item_color_and_size_from_doc(doc)
+        data["color"] = color
+        data["size"] = size
         result.append(data)
 
     return result
+
+
+def _get_item_color_and_size_from_doc(item_doc):
+    """
+    从 Item 文档的 attributes（Item Variant Attribute）中解析颜色、尺码。
+    根据 Item Attribute 的 _user_tags 是否含「颜色」「尺寸」判断。
+    返回 (color, size)，无则返回 ("", "")。
+    """
+    color = ""
+    size = ""
+    for attr in item_doc.get("attributes", []):
+        try:
+            attr_doc = frappe.get_doc("Item Attribute", attr.attribute)
+            val = (attr.attribute_value or "").strip()
+            if "颜色" in (attr_doc.get("_user_tags") or ""):
+                color = val
+            elif "尺寸" in (attr_doc.get("_user_tags") or ""):
+                size = val
+        except Exception:
+            continue
+    return (color, size)
 
 # 要从 API 调用此脚本，使用以下 URL：
 # http://192.168.32.20:8000/api/method/get_items_with_attributes?filters={"item_group": "成品"}&fields=["name","item_code"]

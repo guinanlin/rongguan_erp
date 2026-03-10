@@ -469,6 +469,28 @@ def get_rg_production_orders(page=1, page_size=10):
         frappe.log_error(f"获取 RG Production Orders 数据时出错: {str(e)}")
         frappe.throw(f"获取生产订单数据失败: {str(e)}")
 
+
+def _get_item_color_from_item_code(item_code):
+    """
+    根据物料代码从 Item 主数据的变体属性中取「颜色」值（Item Attribute 的 _user_tags 含「颜色」）。
+    用于 get_production_order_details 中 table_mbev 的 item_color 回填。
+    """
+    if not item_code:
+        return ""
+    try:
+        item_doc = frappe.get_doc("Item", item_code)
+        for attr in item_doc.get("attributes", []):
+            try:
+                attr_doc = frappe.get_doc("Item Attribute", attr.attribute)
+                if attr_doc.get("_user_tags") and "颜色" in (attr_doc.get("_user_tags") or ""):
+                    return (attr.attribute_value or "").strip()
+            except Exception:
+                continue
+    except Exception:
+        pass
+    return ""
+
+
 @frappe.whitelist()
 def get_production_order_details(docname):
     """
@@ -612,6 +634,15 @@ def get_production_order_details(docname):
             # 将 table_mbev 重命名为更直观的字段名
             doc_dict["rg_bom_detail_listing"] = doc_dict["table_mbev"]
             # 同时保留原字段名以保持兼容性
+            # 对 table_mbev 中 item_color 为空的记录，从 Item 主数据的「颜色」属性回填（与 items 子表逻辑一致）
+            for row in doc_dict["table_mbev"]:
+                if row.get("item_code") and not (row.get("item_color") or "").strip():
+                    try:
+                        color = _get_item_color_from_item_code(row["item_code"])
+                        if color:
+                            row["item_color"] = color
+                    except Exception as e:
+                        frappe.log_error(f"table_mbev 回填物料颜色时出错 item_code={row.get('item_code')}: {str(e)}")
         else:
             doc_dict["rg_bom_detail_listing"] = []
         
