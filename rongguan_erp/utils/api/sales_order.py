@@ -537,34 +537,46 @@ def get_sales_order_detail(sales_order_number):
         print(f"styleItemRecord:============== {styleItemRecord}")
         styleItem = { "item_name": styleItemRecord.item_name, "item_code": styleItemRecord.item_code }
 
-        # 为每个物料获取属性
+        # 为每个物料获取属性，并按 Item Attribute 的 _user_tags 判定颜色/尺码
         items_with_attributes = []
         for item in sales_order.items:
             item_dict = item.as_dict()
-            # 从 ItemVariantAttribute 获取属性，它包含 'attribute' (name) 和 'attribute_value'
+            # Item Variant Attribute：每条为 attribute（Item Attribute 名，如 "GZ Colors"/"GZ 数字码"）与 attribute_value
             attributes = frappe.get_all(
                 "Item Variant Attribute",
                 filters={"parent": item.item_code},
                 fields=["attribute", "attribute_value"]
             )
-            
-            # 获取每个属性的 _user_tags
+
             enriched_attributes = []
             for attr_item in attributes:
-                item_attribute_doc = frappe.get_doc("Item Attribute", attr_item["attribute"])
-                attr_item["_user_tags"] = item_attribute_doc.get("_user_tags")
-                
-                # 根据 _user_tags 设置 attribute_type
-                if attr_item["_user_tags"] and "颜色" in attr_item["_user_tags"]:
+                attr_name = attr_item.get("attribute")
+                item_attribute_doc = frappe.get_doc("Item Attribute", attr_name)
+                user_tags = (item_attribute_doc.get("_user_tags") or "") if item_attribute_doc else ""
+
+                # 仅通过 Item Attribute 的 _user_tags 判定：含「颜色」为颜色，含「尺寸」为尺码
+                if "颜色" in user_tags:
                     attr_item["attribute_type"] = "color"
-                elif attr_item["_user_tags"] and "尺寸" in attr_item["_user_tags"]:
+                elif "尺寸" in user_tags:
                     attr_item["attribute_type"] = "size"
                 else:
                     attr_item["attribute_type"] = ""
 
+                attr_item["_user_tags"] = user_tags
                 enriched_attributes.append(attr_item)
 
             item_dict["attributes"] = enriched_attributes
+            # custom_color / custom_size：只从变体属性取，按 _user_tags 判定后的 attribute_value
+            color_from_attr = next(
+                (a.get("attribute_value") or "" for a in enriched_attributes if a.get("attribute_type") == "color"),
+                ""
+            )
+            size_from_attr = next(
+                (a.get("attribute_value") or "" for a in enriched_attributes if a.get("attribute_type") == "size"),
+                ""
+            )
+            item_dict["custom_color"] = (item_dict.get("custom_color") or color_from_attr or "").strip()
+            item_dict["custom_size"] = (item_dict.get("custom_size") or size_from_attr or "").strip()
             items_with_attributes.append(item_dict)
 
         # 获取销售订单对应的样衣信息 (RG Pattern)
