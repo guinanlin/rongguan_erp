@@ -108,7 +108,7 @@
    "fieldname": "sample_type",
    "fieldtype": "Select",
    "label": "\u6837\u8863\u7c7b\u578b",
-   "options": "1\u70b9\u6837\n2\u70b9\u6837\n3\u70b9\u6837\nPP\u6837\n\u9500\u552e\u6837\n\u5e7f\u544a\u6837\n\u8df3\u7801\u6837\n\u53c2\u8003\u6837\n\u7167\u7247\u6837\n\u8239\u6837"
+   "options": "\u521d\u6837\n\u4e8c\u6b21\u6837\n\u4e09\u6b21\u6837\nPP\u6837\n\u9500\u552e\u6837\n\u5e7f\u544a\u6837\n\u8df3\u7801\u6837\n\u53c2\u8003\u6837\n\u7167\u7247\u6837\n\u8239\u6837\n\u6d4b\u8bd5\u6837"
   },
   {
    "fieldname": "category",
@@ -178,20 +178,20 @@
    "options": "Sales Order"
   },
   {
+   "collapsible": 1,
    "fieldname": "section_break_assignment",
    "fieldtype": "Section Break",
-   "label": "\u6307\u6d3e\u4fe1\u606f",
-   "collapsible": 1
+   "label": "\u6307\u6d3e\u4fe1\u606f"
   },
   {
+   "default": "unassigned",
    "fieldname": "assigned_status",
    "fieldtype": "Select",
+   "in_list_view": 1,
+   "in_standard_filter": 1,
    "label": "\u6307\u6d3e\u72b6\u6001",
    "options": "unassigned\nassigned",
-   "default": "unassigned",
-   "reqd": 1,
-   "in_list_view": 1,
-   "in_standard_filter": 1
+   "reqd": 1
   },
   {
    "fieldname": "assigned_pattern_designer_id",
@@ -200,11 +200,11 @@
    "options": "Employee"
   },
   {
+   "fetch_from": "assigned_pattern_designer_id.employee_name",
    "fieldname": "assigned_pattern_designer_name",
    "fieldtype": "Data",
    "label": "\u7eb8\u6837\u5e08\u540d\u79f0",
-   "read_only": 1,
-   "fetch_from": "assigned_pattern_designer_id.employee_name"
+   "read_only": 1
   },
   {
    "fieldname": "assigned_at",
@@ -232,7 +232,7 @@
  "index_web_pages_for_search": 1,
  "is_submittable": 1,
  "links": [],
- "modified": "2025-10-08 00:06:36.479924",
+ "modified": "2026-03-21 01:54:17.191423",
  "modified_by": "Administrator",
  "module": "Rongguan Erp",
  "name": "RG Pattern",

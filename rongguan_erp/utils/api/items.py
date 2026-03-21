@@ -61,21 +61,28 @@ def _get_item_color_and_size_from_doc(item_doc):
 # 要从 API 调用此脚本，使用以下 URL：
 # http://192.168.32.20:8000/api/method/get_items_with_attributes?filters={"item_group": "成品"}&fields=["name","item_code"]
 
-# bench --site site1.local execute rongguan_erp.utils.api.items.get_items_attribute_with_value --kwargs '{"filters": {"item_group": "成品"}}'
+# bench --site site1.local execute rongguan_erp.utils.api.items.get_items_attribute_with_value --kwargs '{"filters": {}}'
+# 支持 filters.customer：仅返回该客户可用的属性值（customer 为空=通用，或 customer 匹配）
 @frappe.whitelist(allow_guest=False)  # 确保只允许认证用户访问
 def get_items_attribute_with_value(filters=None, fields=None):
     """
-    获取 Item Attribute Value 及其父表 Item Attribute 的信息（包括 _user_tags）
+    获取 Item Attribute Value 及其父表 Item Attribute 的信息（包括 _user_tags、customer）。
+    每条记录含 customer 字段：留空表示所有客户可用，有值表示仅该客户可用。
+    传入 filters={"customer": "客户名"} 可仅返回该客户可用的属性值。
     """
-    if not filters:
-        filters = {}
-    
-    # 查询 Item Attribute Value（子表）
-    # 需要获取 parent 字段以便关联父表
+    if isinstance(filters, str):
+        try:
+            filters = json.loads(filters)
+        except (json.JSONDecodeError, TypeError):
+            filters = {}
+    filters = dict(filters) if filters else {}
+    filter_customer = filters.pop('customer', None)
+
+    # 查询 Item Attribute Value（子表），含 custom customer 字段
     items = frappe.get_all(
         'Item Attribute Value',
         filters=filters,
-        fields=['name', 'attribute_value', 'abbr', 'parent', 'idx']
+        fields=['name', 'attribute_value', 'abbr', 'parent', 'idx', 'customer']
     )
     
     result = []
@@ -112,7 +119,14 @@ def get_items_attribute_with_value(filters=None, fields=None):
             data['item_attribute'] = parent_cache[parent_name]
         
         result.append(data)
-    
+
+    # 若指定了 customer，仅返回该客户可用的属性值（customer 为空=通用，或 customer 匹配）
+    if filter_customer is not None:
+        result = [
+            r for r in result
+            if (not r.get('customer')) or r.get('customer') == filter_customer
+        ]
+
     return result
 
 # bench --site site1.local execute rongguan_erp.utils.api.items.get_items_by_item_group --kwargs '{"item_group_name": "成品"}'
