@@ -7,6 +7,7 @@
  "field_order": [
   "sales_order_id",
   "customer",
+  "customer_name_display",
   "style_code",
   "product_name",
   "color",
@@ -41,6 +42,15 @@
    "label": "\u5ba2\u6237",
    "length": 100,
    "reqd": 1
+  },
+  {
+   "description": "\u4ece ERP Customer \u540c\u6b65\u7684\u5ba2\u6237\u663e\u793a\u540d\uff08\u7528\u4e8e\u5217\u8868\u6a21\u7cca\u7b5b\u9009\uff09\uff0c\u5f53 customer \u4e3a Customer.name \u65f6\u586b\u5145",
+   "fieldname": "customer_name_display",
+   "fieldtype": "Data",
+   "in_list_view": 1,
+   "label": "\u5ba2\u6237\u663e\u793a\u540d",
+   "length": 255,
+   "read_only": 1
   },
   {
    "description": "\u6b3e\u53f7\uff0c\u5bf9\u5e94Excel\u4e2d\u7684\u6b3e\u53f7",
